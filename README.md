@@ -1,12 +1,24 @@
-# Install
+# Usage
+
+Install `tpm` Python package for development:
+
+```
+flit install
+```
+
+Run `tpm` command line tool:
+
+```
+tpm gene_expressions.tsv gene_lengths.tsv
+```
+
+# Contributing
 
 Install `tpm` Python package for development:
 
 ```
 flit install --symlink
 ```
-
-# Contributing
 
 We suggest using linters:
 
