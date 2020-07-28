@@ -29,17 +29,14 @@ def tpm_normalization(X, l):
     :type X: Numpy ndarray
     :type l: Numpy ndarray
     """
-    print(X.shape, l.shape)
     assert X.shape[0] == l.shape[0]
     assert l.shape[1] == 1
     assert isinstance(X, np.ndarray)
     assert isinstance(l, np.ndarray)
 
     A = X / l
-    sumA = A.sum(axis=1)
-    sumA = sumA[:,None]  # Create column from vector
-    TPM = A / sumA * 1e6
-    return TPM
+    sumA = A.sum(axis=0)
+    return A / sumA * 1e6
 
 
 def format_and_normalize(X, l):
@@ -56,7 +53,6 @@ def format_and_normalize(X, l):
     l = l.loc[common_genes]
 
     TPM = tpm_normalization(X.to_numpy(), l.to_numpy())
-
     return pd.DataFrame(TPM, index=X.index, columns=X.columns)
 
 
@@ -111,5 +107,5 @@ def main():
         TPM.to_csv(output_path, sep='\t')
 
 
-if __name__ == "__name__":
+if __name__ == "__main__":
     main()
