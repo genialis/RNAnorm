@@ -8,12 +8,28 @@ import pandas as pd
 
 __version__ = "1.0.0"
 
-parser = argparse.ArgumentParser(description='TPM normalization')
-parser.add_argument('expressions_file', type=str, help='tab file with gene expression data (genes in rows, samples in cols)')
-parser.add_argument('gene_lengths_file', type=str, help='tab file with gene lengths')
+parser = argparse.ArgumentParser(description="""TPM normalization.
+
+The gene expressions file should include genes in rows and samples in columns.
+The gene ID column should be named FEATURE_ID.
+
+The gene lengths file should have two columns, FEATURE_ID and GENE_LENGTHS.
+
+Gene IDs in expressions file should match the gene IDs in gene lengths file.
+
+""")
+parser.add_argument('expressions_file', type=str, help='tab-delimited file with gene expression data (genes in rows, samples in cols)')
+parser.add_argument('gene_lengths_file', type=str, help='tab-delimited file with gene lengths')
+parser.add_argument('--output', '-o', type=str, help='output file name')
 
 
 def tpm_normalization(X, l):
+    """TPM normalization.
+
+    :type X: Numpy ndarray
+    :type l: Numpy ndarray
+    """
+    print(X.shape, l.shape)
     assert X.shape[0] == l.shape[0]
     assert l.shape[1] == 1
     assert isinstance(X, np.ndarray)
@@ -22,22 +38,33 @@ def tpm_normalization(X, l):
     A = X / l
     sumA = A.sum(axis=1)
     sumA = sumA[:,None]  # Create column from vector
-    TPM = 1e6 * A / sumA
+    TPM = A / sumA * 1e6
     return TPM
 
 
-def format_inputs(X, l):
+def format_and_normalize(X, l):
+    """Validate Pandas DataFrame inputs, prepare Numpy arrays and normalize.
+
+    :type X: Pandas DataFrame
+    :type l: Pandas DataFrame
+    """
     assert isinstance(X, pd.DataFrame)
     assert isinstance(l, pd.DataFrame)
-    X = X.to_numpy()
-    l = l.to_numpy()
-    return X, l
+
+    common_genes = X.index.intersection(l.index)
+    X = X.loc[common_genes]
+    l = l.loc[common_genes]
+
+    TPM = tpm_normalization(X.to_numpy(), l.to_numpy())
+
+    return pd.DataFrame(TPM, index=X.index, columns=X.columns)
 
 
 def main():
     args = parser.parse_args()
     expressions_path = args.expressions_file
     gene_lengths_path = args.gene_lengths_file
+    output_path = args.output
 
     if not os.path.exists(expressions_path):
         print(f"File not found {expressions_path}")
@@ -67,13 +94,21 @@ def main():
     if "feature_id" in column_map:
         feature_id_column = column_map["feature_id"]
     else:
-        print("FEATURE_ID column not found in expression data")
+        print("FEATURE_ID column not found in gene_lengths data")
         exit(1)
 
     gene_lengths.set_index(feature_id_column, inplace = True)
 
-    X, l = format_inputs(expressions, gene_lengths)
-    tpm_normalization(X, l)
+    if gene_lengths.shape[1] != 1:
+        print("Gene lengths should have two columns: FEATURE_ID and GENE_LENGTHS")
+        exit(1)
+
+    TPM = format_and_normalize(expressions, gene_lengths)
+
+    if output_path is None:
+        print(TPM.to_csv(sep='\t'))
+    else:
+        TPM.to_csv(output_path, sep='\t')
 
 
 if __name__ == "__name__":
