@@ -65,6 +65,31 @@ def tpm(X, y):
         return _tpm_ndarray(X, y)
 
 
+def cpm(X):
+    """Counts per million (CPM).
+
+    CPM = readsMappedToGene / totalNumReads * 1e6
+
+    :type X: 2-D array_like
+    """
+    if isinstance(X, pd.DataFrame):
+        assert X.to_numpy().min() >= 0.0  # Gene counts must be non-negative
+    else:
+        # Cast non-Pandas array_like objects to Numpy
+        X = np.asarray(X, dtype=np.float64)
+        assert np.min(X) >= 0.0  # Gene counts must be non-negative
+
+    sumX = X.sum(axis=0)
+
+    with np.errstate(invalid="ignore"):  # Ignore warnings of division by 0
+        CPM = X / sumX * 1e6
+
+        # Samples with zeros for all genes get nan but should be 0.0
+        np.nan_to_num(CPM, copy=False)
+
+    return CPM
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="""TPM normalization.
