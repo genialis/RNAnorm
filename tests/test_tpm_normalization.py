@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from rnanorm.normalization import tpm_normalization
+from rnanorm.normalization import tpm
 
 
 def test_tpm_normalization():
@@ -38,9 +38,11 @@ def test_tpm_normalization():
     X = pd.DataFrame(expressions, index=genes, columns=["S1", "S2"])
     y = pd.DataFrame(gene_lengths, index=genes, columns=["GENE_LENGTHS"])
 
-    TPM = tpm_normalization(X.to_numpy(), y.to_numpy())
+    TPM = tpm(X, y)
+    assert np.all(np.asarray(TPM, dtype=int) == manually_computed_TPM)  # Test Pandas array
 
-    assert np.all(TPM.astype(int) == manually_computed_TPM)
+    TPM = tpm(X.to_numpy(), y.to_numpy())
+    assert np.all(TPM.astype(int) == manually_computed_TPM)  # Test Numpy array
 
 
 def test_devision_by_zero():
@@ -52,6 +54,6 @@ def test_devision_by_zero():
     X = pd.DataFrame(expressions, index=genes, columns=["S1"])
     y = pd.DataFrame(gene_lengths, index=genes, columns=["GENE_LENGTHS"])
 
-    TPM = tpm_normalization(X.to_numpy(), y.to_numpy())
+    TPM = tpm(X.to_numpy(), y.to_numpy())
 
     assert np.all(TPM.astype(int) == expected_TPM)

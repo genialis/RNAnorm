@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 
 
-def tpm_normalization(X, y):
+def _tpm_ndarray(X, y):
     """TPM normalization.
 
     :type X: Numpy ndarray
@@ -30,21 +30,29 @@ def tpm_normalization(X, y):
     return TPM
 
 
-def format_and_normalize(X, y):
-    """Validate Pandas DataFrame inputs, prepare Numpy arrays and normalize.
+def tpm(X, y):
+    """Transcript per kilobase million (TPM).
 
-    :type X: Pandas DataFrame
-    :type y: Pandas DataFrame
+    A = readsMappedToGene / geneLength
+    TPM = A / SUM(A) * 1e6
+
+    :type X: 2-D array_like
+    :type y: 1-D array_like
     """
-    assert isinstance(X, pd.DataFrame)
-    assert isinstance(y, pd.DataFrame)
+    if isinstance(X, pd.DataFrame) and isinstance(y, pd.DataFrame):
+        common_genes = X.index.intersection(y.index)
+        X = X.loc[common_genes]
+        y = y.loc[common_genes]
 
-    common_genes = X.index.intersection(y.index)
-    X = X.loc[common_genes]
-    y = y.loc[common_genes]
+        X_ = np.asarray(X, dtype=np.float64)
+        y_ = np.asarray(y, dtype=np.float64)
+        TPM = _tpm_ndarray(X_, y_)
 
-    TPM = tpm_normalization(X.to_numpy(), y.to_numpy())
-    return pd.DataFrame(TPM, index=X.index, columns=X.columns)
+        return pd.DataFrame(TPM, index=X.index, columns=X.columns)
+    else:
+        X = np.asarray(X, dtype=np.float64)
+        y = np.asarray(y, dtype=np.float64)
+        return _tpm_ndarray(X, y)
 
 
 def main():
@@ -110,7 +118,7 @@ def main():
         print("Gene lengths should have two columns: FEATURE_ID and GENE_LENGTHS")
         exit(1)
 
-    TPM = format_and_normalize(expressions, gene_lengths)
+    TPM = tpm(expressions, gene_lengths)
 
     if output_path is None:
         print(TPM.to_csv(sep="\t"))
