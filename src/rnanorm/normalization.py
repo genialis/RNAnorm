@@ -1,6 +1,7 @@
 """TPM normalization"""
 import argparse
 import os
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -41,6 +42,15 @@ def tpm(X, y):
     """
     if isinstance(X, pd.DataFrame) and isinstance(y, pd.DataFrame):
         common_genes = X.index.intersection(y.index)
+        ncommon = len(common_genes)
+        if ncommon != X.shape[0] or ncommon != y.shape[0]:
+            warnings.warn(
+                f"Geneset mismatch between expressions ({X.shape[0]}) and gene "
+                f"lengths ({y.shape[0]}). Using intersection ({ncommon})...",
+                RuntimeWarning,
+                stacklevel=2,
+            )
+
         X = X.loc[common_genes]
         y = y.loc[common_genes]
 
