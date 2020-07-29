@@ -7,17 +7,19 @@ target-version = ["py38"]
 line-length = 119
 
 [tool.flit.metadata]
-module = "tpm"
+module = "rnanorm"
 author = "Genialis, Inc."
 author-email = "miha@genialis.com"
+description-file = "README.md"
 requires=[
     "pandas~=1.0.1",
     "black",
     "isort",
     "flake8",
 ]
+
 [tool.flit.scripts]
-tpm = "tpm:main"
+rnanorm = "rnanorm.normalization:main"
 
 [tool.isort]
 line_length = 119

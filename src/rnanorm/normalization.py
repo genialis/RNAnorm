@@ -6,23 +6,6 @@ import numpy as np
 import pandas as pd
 
 
-__version__ = "1.0.0"
-
-parser = argparse.ArgumentParser(description="""TPM normalization.
-
-The gene expressions file should include genes in rows and samples in columns.
-The gene ID column should be named FEATURE_ID.
-
-The gene lengths file should have two columns, FEATURE_ID and GENE_LENGTHS.
-
-Gene IDs in expressions file should match the gene IDs in gene lengths file.
-
-""")
-parser.add_argument('expressions_file', type=str, help='tab-delimited file with gene expression data (genes in rows, samples in cols)')
-parser.add_argument('gene_lengths_file', type=str, help='tab-delimited file with gene lengths')
-parser.add_argument('--output', '-o', type=str, help='output file name')
-
-
 def tpm_normalization(X, l):
     """TPM normalization.
 
@@ -57,6 +40,22 @@ def format_and_normalize(X, l):
 
 
 def main():
+    parser = argparse.ArgumentParser(
+        description="""TPM normalization.
+
+    The gene expressions file should include genes in rows and samples in columns.
+    The gene ID column should be named FEATURE_ID.
+
+    The gene lengths file should have two columns, FEATURE_ID and GENE_LENGTHS.
+
+    Gene IDs in expressions file should match the gene IDs in gene lengths file.
+
+    """
+    )
+    parser.add_argument('expressions_file', type=str, help='tab-delimited file with gene expression data (genes in rows, samples in cols)')
+    parser.add_argument('gene_lengths_file', type=str, help='tab-delimited file with gene lengths')
+    parser.add_argument('--output', '-o', type=str, help='output file name')
+
     args = parser.parse_args()
     expressions_path = args.expressions_file
     gene_lengths_path = args.gene_lengths_file
@@ -105,7 +104,3 @@ def main():
         print(TPM.to_csv(sep='\t'))
     else:
         TPM.to_csv(output_path, sep='\t')
-
-
-if __name__ == "__main__":
-    main()
