@@ -1,3 +1,3 @@
-from .normalization import main
+from .command import main
 
 main()
