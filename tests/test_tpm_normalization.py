@@ -41,3 +41,17 @@ def test_tpm_normalization():
     TPM = tpm_normalization(X.to_numpy(), y.to_numpy())
 
     assert np.all(TPM.astype(int) == manually_computed_TPM)
+
+
+def test_devision_by_zero():
+    genes = ["ENSG00000136807", "ENSG00000176903", "ENSG00000241490"]
+    gene_lengths = [3000, 2590, 3101]
+    expressions = [[0], [0], [0]]
+    expected_TPM = [[0], [0], [0]]
+
+    X = pd.DataFrame(expressions, index=genes, columns=["S1"])
+    y = pd.DataFrame(gene_lengths, index=genes, columns=["GENE_LENGTHS"])
+
+    TPM = tpm_normalization(X.to_numpy(), y.to_numpy())
+
+    assert np.all(TPM.astype(int) == expected_TPM)

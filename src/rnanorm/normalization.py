@@ -12,14 +12,22 @@ def tpm_normalization(X, y):
     :type X: Numpy ndarray
     :type y: Numpy ndarray
     """
-    assert X.shape[0] == y.shape[0]
-    assert y.shape[1] == 1
     assert isinstance(X, np.ndarray)
     assert isinstance(y, np.ndarray)
+    assert X.shape[0] == y.shape[0]
+    assert y.shape[1] == 1
+    assert np.min(X) >= 0.0  # Gene counts must be non-negative
 
     A = X / y
     sumA = A.sum(axis=0)
-    return A / sumA * 1e6
+
+    with np.errstate(invalid="ignore"):  # Ignore warnings of division by 0
+        TPM = A / sumA * 1e6
+
+        # Samples with zeros for all genes get nan but should be 0.0
+        np.nan_to_num(TPM, copy=False)
+
+    return TPM
 
 
 def format_and_normalize(X, y):
