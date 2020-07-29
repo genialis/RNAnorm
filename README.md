@@ -11,7 +11,7 @@ flit install
 Run `rnanorm` command line tool:
 
 ```
-rnanorm gene_expressions.tsv gene_lengths.tsv
+rnanorm expr.tsv --cpm-output=expr.cpm.tsv --tpm-output=expr.tpm.tsv --gene-lengths=lengths.tsv
 ```
 
 # Contributing

@@ -4,7 +4,7 @@ import os
 
 import pandas as pd
 
-from .normalization import tpm
+from .normalization import cpm, tpm
 
 
 def main():
@@ -21,27 +21,35 @@ def main():
     """
     )
     parser.add_argument(
-        "expressions_file",
-        type=str,
-        help="tab-delimited file with gene expression data (genes in rows, samples in cols)",
+        "expression", type=str, help="tab-delimited file with gene expression data (genes in rows, samples in cols)",
     )
-    parser.add_argument("gene_lengths_file", type=str, help="tab-delimited file with gene lengths")
-    parser.add_argument("--output", "-o", type=str, help="output file name")
+    parser.add_argument("--gene-lengths", type=str, help="tab-delimited file with gene lengths")
+    parser.add_argument("--tpm-output", type=str, help="TPM output file name")
+    parser.add_argument("--cpm-output", type=str, help="CPM output file name")
 
     args = parser.parse_args()
-    expressions_path = args.expressions_file
-    gene_lengths_path = args.gene_lengths_file
-    output_path = args.output
+    expression_path = args.expression
+    gene_lengths_path = args.gene_lengths
+    tpm_output_path = args.tpm_output
+    cpm_output_path = args.cpm_output
 
-    if not os.path.exists(expressions_path):
-        print(f"File not found {expressions_path}")
+    if not os.path.exists(expression_path):
+        print(f"Expressions file not found {expression_path}")
         exit(1)
 
-    if not os.path.exists(gene_lengths_path):
-        print(f"File not found {gene_lengths_path}")
-        exit(1)
+    if tpm_output_path:
+        if gene_lengths_path is None:
+            print("--gene-lengths must be given for --tpm-output")
+            exit(1)
 
-    expressions = pd.read_csv(expressions_path, sep="\t")
+        if not os.path.exists(gene_lengths_path):
+            print(f"Gene lengths file not found {gene_lengths_path}")
+            exit(1)
+
+    if tpm_output_path is None and cpm_output_path is None:
+        exit()
+
+    expressions = pd.read_csv(expression_path, sep="\t")
 
     column_map = {col.lower(): col for col in expressions.columns}
     if "feature_id" in column_map:
@@ -56,23 +64,24 @@ def main():
 
     expressions.set_index(feature_id_column, inplace=True)
 
-    gene_lengths = pd.read_csv(gene_lengths_path, sep="\t")
-    column_map = {col.lower(): col for col in gene_lengths.columns}
-    if "feature_id" in column_map:
-        feature_id_column = column_map["feature_id"]
-    else:
-        print("FEATURE_ID column not found in gene_lengths data")
-        exit(1)
+    if cpm_output_path:
+        CPM = cpm(expressions)
+        CPM.to_csv(cpm_output_path, sep="\t")
 
-    gene_lengths.set_index(feature_id_column, inplace=True)
+    if tpm_output_path:
+        gene_lengths = pd.read_csv(gene_lengths_path, sep="\t")
+        column_map = {col.lower(): col for col in gene_lengths.columns}
+        if "feature_id" in column_map:
+            feature_id_column = column_map["feature_id"]
+        else:
+            print("FEATURE_ID column not found in gene_lengths data")
+            exit(1)
 
-    if gene_lengths.shape[1] != 1:
-        print("Gene lengths should have two columns: FEATURE_ID and GENE_LENGTHS")
-        exit(1)
+        gene_lengths.set_index(feature_id_column, inplace=True)
 
-    TPM = tpm(expressions, gene_lengths)
+        if gene_lengths.shape[1] != 1:
+            print("Gene lengths should have two columns: FEATURE_ID and GENE_LENGTHS")
+            exit(1)
 
-    if output_path is None:
-        print(TPM.to_csv(sep="\t"))
-    else:
-        TPM.to_csv(output_path, sep="\t")
+        TPM = tpm(expressions, gene_lengths)
+        TPM.to_csv(tpm_output_path, sep="\t")
