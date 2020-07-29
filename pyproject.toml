@@ -17,6 +17,11 @@ requires=[
     "flake8",
 ]
 
+[tool.flit.metadata.requires-extra]
+test = [
+    "pytest",
+]
+
 [tool.flit.scripts]
 rnanorm = "rnanorm:main"
 
