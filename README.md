@@ -22,10 +22,14 @@ Install `rnanorm` Python package for development:
 flit install --symlink
 ```
 
-We suggest using linters:
+Run all tests:
 
 ```
-black --check rnanorm
-flake8 rnanorm
-isort --recursive --check-only --diff rnanorm
+tox
+```
+
+Run linters:
+
+```
+tox -e linters
 ```
