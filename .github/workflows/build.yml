@@ -1,0 +1,30 @@
+name: RnaSeq Actions
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        tox-env: [py36, py37, py38, linters]
+        include:
+          - tox-env: py36
+            python-version: 3.6
+          - tox-env: py37
+            python-version: 3.7
+          - tox-env: py38
+            python-version: 3.8
+          - tox-env: linters
+            python-version: 3.6
+
+    steps:
+      - uses: actions/checkout@v1
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install Tox
+        run: python -m pip install --user tox
+      - name: Run Tox
+        run: python -m tox -e ${{ matrix.tox-env }} --skip-missing-interpreters false
