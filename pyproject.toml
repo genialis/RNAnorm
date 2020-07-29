@@ -7,7 +7,7 @@ target-version = ["py38"]
 line-length = 119
 
 [tool.flit.metadata]
-module = "tpm"
+module = "rnanorm"
 author = "Genialis, Inc."
 author-email = "miha@genialis.com"
 requires=[
@@ -16,8 +16,9 @@ requires=[
     "isort",
     "flake8",
 ]
+
 [tool.flit.scripts]
-tpm = "tpm:main"
+rnanorm = "rnanorm:main"
 
 [tool.isort]
 line_length = 119

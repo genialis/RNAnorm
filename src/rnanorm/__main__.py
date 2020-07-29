@@ -1,0 +1,3 @@
+import normalization
+
+normalization.main()

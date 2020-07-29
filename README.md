@@ -1,12 +1,12 @@
 # Usage
 
-Install `tpm` Python package for development:
+Install `rnanorm` Python package for development:
 
 ```
 flit install
 ```
 
-Run `tpm` command line tool:
+Run `rnanorm` command line tool:
 
 ```
 tpm gene_expressions.tsv gene_lengths.tsv
@@ -14,7 +14,7 @@ tpm gene_expressions.tsv gene_lengths.tsv
 
 # Contributing
 
-Install `tpm` Python package for development:
+Install `rnanorm` Python package for development:
 
 ```
 flit install --symlink
@@ -23,7 +23,7 @@ flit install --symlink
 We suggest using linters:
 
 ```
-black --check oncologie
-flake8 oncologie
-isort --recursive --check-only --diff oncologie
+black --check rnanorm
+flake8 rnanorm
+isort --recursive --check-only --diff rnanorm
 ```
