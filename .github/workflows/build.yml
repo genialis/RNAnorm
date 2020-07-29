@@ -1,0 +1,52 @@
+name: RnaSeq test and build
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-18.04
+    strategy:
+      fail-fast: false
+      matrix:
+        tox-env: [py36, py37, py38, linters]
+        include:
+          - tox-env: py36
+            python-version: 3.6
+          - tox-env: py37
+            python-version: 3.7
+          - tox-env: py38
+            python-version: 3.8
+          - tox-env: linters
+            python-version: 3.6
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install Tox
+        run: python -m pip install --user tox
+      - name: Run Tox
+        run: python -m tox -e ${{ matrix.tox-env }} --skip-missing-interpreters false
+
+  build:
+    runs-on: ubuntu-18.04
+
+    needs: test
+    if: "startsWith(github.ref, 'refs/tags')"
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - name: Install pep517
+        run: python -m pip install --user pep517
+      - name: Build a binary wheel and a source tarball
+        run: python -m pep517.build --source --binary --out-dir dist/ .
+      - name: Publish distribution to PyPI
+        uses: pypa/gh-action-pypi-publish@master
+        with:
+          user: __token__
+          password: ${{ secrets.pypi_token }}
