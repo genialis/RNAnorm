@@ -2,7 +2,7 @@ Normalization of RNA-seq gen expression. Supported methods: Transcript per kilob
 
 # Usage
 
-Install `rnanorm` Python package for development:
+Install `rnanorm` Python package:
 
 ```
 flit install
