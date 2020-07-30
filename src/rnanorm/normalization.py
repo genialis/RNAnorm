@@ -21,7 +21,7 @@ def _tpm_ndarray(X, y):
     sumA = A.sum(axis=0)
 
     with np.errstate(invalid="ignore"):  # Ignore warnings of division by 0
-        TPM = A / sumA * 1e6
+        TPM = 1e6 * A / sumA
 
         # Samples with zeros for all genes get nan but should be 0.0
         np.nan_to_num(TPM, copy=False)
@@ -80,7 +80,7 @@ def cpm(X):
     sumX = X.sum(axis=0)
 
     with np.errstate(invalid="ignore"):  # Ignore warnings of division by 0
-        CPM = X / sumX * 1e6
+        CPM = 1e6 * X / sumX
 
         # Samples with zeros for all genes get nan but should be 0.0
         np.nan_to_num(CPM, copy=False)
