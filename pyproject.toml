@@ -10,6 +10,7 @@ line-length = 119
 module = "rnanorm"
 author = "Genialis, Inc."
 author-email = "miha@genialis.com"
+home-page="https://github.com/genialis/rnaseq-normalization/"
 description-file = "README.md"
 requires=[
     "pandas~=1.0.1",
