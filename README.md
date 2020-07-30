@@ -1,8 +1,8 @@
-Normalization of RNA-seq gen expression. Supported methods: Transcript per kilobase million (TPM) and Counts per million (CPM).
+Normalization of RNA-seq gene expression. Supported methods: Transcript per kilobase million (TPM) and Counts per million (CPM).
 
 # Usage
 
-Install `rnanorm` Python package for development:
+Install `rnanorm` Python package:
 
 ```
 flit install
