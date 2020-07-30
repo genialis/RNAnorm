@@ -1,4 +1,4 @@
-"""TPM normalization"""
+"""RNA-seq normalization methods."""
 import warnings
 
 import numpy as np
@@ -6,7 +6,7 @@ import pandas as pd
 
 
 def _tpm_ndarray(X, y):
-    """TPM normalization.
+    """Normalize Numpy ndarray expression counts to TPM.
 
     :type X: Numpy ndarray
     :type y: Numpy ndarray
@@ -30,7 +30,7 @@ def _tpm_ndarray(X, y):
 
 
 def tpm(X, y):
-    """Transcript per kilobase million (TPM).
+    """Normalize expression counts to Transcript per kilobase million (TPM).
 
     A = readsMappedToGene / geneLength
     TPM = A / SUM(A) * 1e6
@@ -64,7 +64,7 @@ def tpm(X, y):
 
 
 def cpm(X):
-    """Counts per million (CPM).
+    """Normalize expression counts to Counts per million (CPM).
 
     CPM = readsMappedToGene / totalNumReads * 1e6
 

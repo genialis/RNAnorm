@@ -8,6 +8,7 @@ from .normalization import cpm, tpm
 
 
 def main():
+    """Run rnanorm command."""
     parser = argparse.ArgumentParser(
         description="""TPM normalization.
 
