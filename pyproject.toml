@@ -11,7 +11,7 @@ module = "rnanorm"
 author = "Genialis, Inc."
 author-email = "miha@genialis.com"
 home-page="https://github.com/genialis/rnaseq-normalization/"
-description-file = "README.md"
+description-file = "README.rst"
 requires-python=">=3.6, <3.9"
 requires = [
     "numpy",
