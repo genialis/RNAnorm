@@ -1,4 +1,4 @@
-name: RnaSeq test and build
+name: build
 on: [push, pull_request]
 
 jobs:
