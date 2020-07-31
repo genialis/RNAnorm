@@ -5,7 +5,7 @@ import sys
 
 import pandas as pd
 
-from .normalization import cpm, tpm
+from rnanorm.normalization import cpm, tpm
 
 
 class ArgumentValidateException(Exception):
@@ -139,3 +139,7 @@ def main():
     except InputParserException as e:
         print(e)
         exit(1)
+
+
+if __name__ == "__main__":
+    main()
