@@ -12,15 +12,19 @@ author = "Genialis, Inc."
 author-email = "miha@genialis.com"
 home-page="https://github.com/genialis/rnaseq-normalization/"
 description-file = "README.md"
-requires=[
-    "pandas~=1.0.1",
+requires-python=">=3.6, <3.9"
+requires = [
+    "numpy",
+    "pandas",
+]
+
+[tool.flit.metadata.requires-extra]
+linters = [
     "black",
     "pydocstyle",
     "isort",
     "flake8",
 ]
-
-[tool.flit.metadata.requires-extra]
 test = [
     "pytest",
 ]
