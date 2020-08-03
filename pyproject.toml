@@ -16,6 +16,7 @@ requires-python=">=3.6, <3.9"
 requires = [
     "numpy",
     "pandas",
+    "pybedtools",
 ]
 classifiers = [
     "Development Status :: 4 - Beta",

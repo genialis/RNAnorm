@@ -35,11 +35,23 @@ Install ``rnanorm`` Python package:
 
     pip install rnanorm
 
-Run ``rnanorm`` command line tool:
+See ``rnanorm`` command help:
+
+.. code::
+
+    rnanorm --help
+
+Run ``rnanorm`` with pre-computed gene lengths:
 
 .. code::
 
     rnanorm expr.tsv --cpm-output=expr.cpm.tsv --tpm-output=expr.tpm.tsv --gene-lengths=lengths.tsv
+
+Run ``rnanorm`` with genome annotation - gene lengths will be computed on the fly:
+
+.. code::
+
+    rnanorm expr.tsv --cpm-output=expr.cpm.tsv --tpm-output=expr.tpm.tsv --annotation=annot.gtf
 
 Contributing
 ============

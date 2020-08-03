@@ -5,6 +5,7 @@ import sys
 
 import pandas as pd
 
+from rnanorm.annotation import union_exon_lengths
 from rnanorm.normalization import cpm, tpm
 
 
@@ -44,6 +45,8 @@ def parse_args(args):
         "expression", type=str, help="tab-delimited file with gene expression data (genes in rows, samples in cols)",
     )
     parser.add_argument("--gene-lengths", type=str, help="tab-delimited file with gene lengths")
+    parser.add_argument("--annotation", type=str, help="Annotation file in GTF format")
+    parser.add_argument("--gene-id-attr", type=str, help="Gene ID attribute for annotation file", default="gene_id")
     parser.add_argument("--tpm-output", type=str, help="TPM output file name")
     parser.add_argument("--cpm-output", type=str, help="CPM output file name")
     return parser.parse_args(args)
@@ -53,6 +56,7 @@ def validate_args(args):
     """Validate that input files exist when they are needed."""
     expression_path = args.expression
     gene_lengths_path = args.gene_lengths
+    annotation_path = args.annotation
     tpm_output_path = args.tpm_output
     cpm_output_path = args.cpm_output
 
@@ -60,11 +64,18 @@ def validate_args(args):
         raise ArgumentValidateException(f"Expressions file not found {expression_path}")
 
     if tpm_output_path:
-        if gene_lengths_path is None:
-            raise ArgumentValidateException("--gene-lengths must be given for --tpm-output")
+        # 1. Validate argument consistency
+        if gene_lengths_path is None and annotation_path is None:
+            raise ArgumentValidateException("--gene-lengths or --annotation must be given for --tpm-output")
 
-        if not os.path.exists(gene_lengths_path):
+        if gene_lengths_path is not None and annotation_path is not None:
+            raise ArgumentValidateException("Only one of --gene-lengths or --annotation must be given")
+
+        # 2. Validate that files actually exist.
+        if gene_lengths_path and not os.path.exists(gene_lengths_path):
             raise ArgumentValidateException(f"Gene lengths file not found {gene_lengths_path}")
+        if annotation_path and not os.path.exists(annotation_path):
+            raise ArgumentValidateException(f"Annotation file not found {annotation_path}")
 
     if tpm_output_path is None and cpm_output_path is None:
         raise NoOutputException
@@ -121,6 +132,8 @@ def main():
 
     expression_path = args.expression
     gene_lengths_path = args.gene_lengths
+    annotation_path = args.annotation
+    gene_id_attr = args.gene_id_attr
     tpm_output_path = args.tpm_output
     cpm_output_path = args.cpm_output
 
@@ -132,7 +145,10 @@ def main():
             CPM.to_csv(cpm_output_path, sep="\t")
 
         if tpm_output_path:
-            gene_lengths = load_gene_lengths(gene_lengths_path)
+            if gene_lengths_path:
+                gene_lengths = load_gene_lengths(gene_lengths_path)
+            elif annotation_path:
+                gene_lengths = union_exon_lengths(annotation_path, gene_id_attr)
             TPM = tpm(expressions, gene_lengths)
             TPM.to_csv(tpm_output_path, sep="\t")
 
