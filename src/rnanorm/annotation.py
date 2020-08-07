@@ -72,6 +72,11 @@ def union_exon_lengths(annotation, gene_id_attr="gene_id"):
     for segment in pbt.BedTool(annotation):
         if segment[2] != "exon":
             continue
+        if gene_id_attr not in segment.attrs:
+            raise ValueError(
+                "Gene ID attribute is missing in the segment {segment[:]}. Please "
+                "supply correct gene ID attribute with --gene-id-attr parameter."
+            )
 
         data[segment.attrs[gene_id_attr]][(segment.chrom, segment.strand)].append([segment.start, segment.end])
 
