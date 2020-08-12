@@ -24,14 +24,25 @@ RNA-Seq Normalization
     :target: https://pepy.tech/project/rnanorm
     :alt: Number of downloads from PyPI
 
-Normalization of RNA-seq gene expression data. Supported methods are Transcript
-per kilobase million (TPM) and Counts per million (CPM).
+Normalization of RNA-seq gene expression data. Supported methods:
+
+* Counts per million (CPM)
+* Transcript per kilobase million (TPM)
+* Quantile normalization to average distribution
 
 The TPM normalization can either accept pre-computed gene lengths on the input
 or compute gene lengths from gene annotation in GTF format, using the union
 exon-based approach. The computed gene lengths are identical to the lengths
 reported by featureCounts (validated for *Homo sapiens*, *Mus musculus*,
 *Rattus norvegicus*, and *Macaca mulatta* of ENSEMBL and UCSC annotations).
+
+Quantile normalization is implemented as described on Wikipedia_. First, we
+compute an average distribution by sorting each sample (column) and taking the
+mean over rows to determine the rank values. Second, we compute ranks over
+columns (samples) and substitute the rank with the rank value (average
+expression for each rank).
+
+.. _Wikipedia: https://en.wikipedia.org/wiki/Quantile_normalization
 
 Usage
 =====
@@ -59,6 +70,12 @@ Run ``rnanorm`` with genome annotation - gene lengths will be computed on the fl
 .. code::
 
     rnanorm expr.tsv --cpm-output=expr.cpm.tsv --tpm-output=expr.tpm.tsv --annotation=annot.gtf
+
+For quantile normalization we suggest using TPM expressions on the input:
+
+.. code::
+
+    rnanorm expr.tpm.tsv --quantile-output=expr.quantile.tsv
 
 Contributing
 ============

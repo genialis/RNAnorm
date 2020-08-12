@@ -3,6 +3,7 @@ import warnings
 
 import numpy as np
 import pandas as pd
+from scipy.stats import rankdata
 
 
 def _tpm_ndarray(X, y):
@@ -86,3 +87,35 @@ def cpm(X):
         np.nan_to_num(CPM, copy=False)
 
     return CPM
+
+
+def quantile(X):
+    """Quantile normalize gene expression to average distribution.
+
+    The procedure is implemented as described on Wikipedia_ and runs on columns and rows:
+
+    * Rearrange the column values so each column is in order from lowest to highest value
+    * Find the mean for each row to determine the average distribution of expression values
+    * For each column in original data determine a rank from lowest to highest
+    * Take the ranking order and substitute in new values from the average distribution
+
+    .. _Wikipedia: https://en.wikipedia.org/wiki/Quantile_normalization
+    """
+    # Cast array_like objects to Numpy
+    X_ = np.asarray(X, dtype=np.float64)
+    assert np.min(X_) >= 0.0  # Gene expression must be non-negative
+
+    average_expression_distribution = np.mean(np.sort(X_, axis=0), axis=1)
+
+    rank_avg = rankdata(X_, method="average", axis=0) - 1
+    rank_floor = rank_avg.astype(int)
+    rank_ceil = np.ceil(rank_avg).astype(int)
+
+    X_floor = average_expression_distribution.take(rank_floor)
+    X_ceil = average_expression_distribution.take(rank_ceil)
+    X_ = (X_floor + X_ceil) / 2
+
+    if isinstance(X, pd.DataFrame):
+        return pd.DataFrame(X_, index=X.index, columns=X.columns)
+    else:
+        return X_

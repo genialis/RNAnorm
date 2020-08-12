@@ -6,7 +6,7 @@ import sys
 import pandas as pd
 
 from rnanorm.annotation import union_exon_lengths
-from rnanorm.normalization import cpm, tpm
+from rnanorm.normalization import cpm, quantile, tpm
 
 
 class ArgumentValidateException(Exception):
@@ -49,6 +49,7 @@ def parse_args(args):
     parser.add_argument("--gene-id-attr", type=str, help="Gene ID attribute for annotation file", default="gene_id")
     parser.add_argument("--tpm-output", type=str, help="TPM output file name")
     parser.add_argument("--cpm-output", type=str, help="CPM output file name")
+    parser.add_argument("--quantile-output", type=str, help="Quantile-normalized expression output file name")
     return parser.parse_args(args)
 
 
@@ -59,6 +60,7 @@ def validate_args(args):
     annotation_path = args.annotation
     tpm_output_path = args.tpm_output
     cpm_output_path = args.cpm_output
+    quantile_output_path = args.quantile_output
 
     if not os.path.exists(expression_path):
         raise ArgumentValidateException(f"Expressions file not found {expression_path}")
@@ -77,7 +79,7 @@ def validate_args(args):
         if annotation_path and not os.path.exists(annotation_path):
             raise ArgumentValidateException(f"Annotation file not found {annotation_path}")
 
-    if tpm_output_path is None and cpm_output_path is None:
+    if tpm_output_path is None and cpm_output_path is None and quantile_output_path is None:
         raise NoOutputException
 
 
@@ -136,6 +138,7 @@ def main():
     gene_id_attr = args.gene_id_attr
     tpm_output_path = args.tpm_output
     cpm_output_path = args.cpm_output
+    quantile_output_path = args.quantile_output
 
     try:
         expressions = load_expressions(expression_path)
@@ -151,6 +154,10 @@ def main():
                 gene_lengths = union_exon_lengths(annotation_path, gene_id_attr)
             TPM = tpm(expressions, gene_lengths)
             TPM.to_csv(tpm_output_path, sep="\t")
+
+        if quantile_output_path:
+            QT = quantile(expressions)
+            QT.to_csv(quantile_output_path, sep="\t")
 
     except InputParserException as e:
         print(e)
