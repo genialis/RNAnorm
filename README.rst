@@ -1,6 +1,6 @@
-====================
-RNASeq normalization
-====================
+=====================
+RNA-Seq Normalization
+=====================
 
 |build| |black| |pypi_version| |pypi_pyversions| |pypi_downloads|
 
@@ -24,7 +24,14 @@ RNASeq normalization
     :target: https://pepy.tech/project/rnanorm
     :alt: Number of downloads from PyPI
 
-Normalization of RNA-seq gene expression. Supported methods: Transcript per kilobase million (TPM) and Counts per million (CPM).
+Normalization of RNA-seq gene expression data. Supported methods are Transcript
+per kilobase million (TPM) and Counts per million (CPM).
+
+The TPM normalization can either accept pre-computed gene lengths on the input
+or compute gene lengths from gene annotation in GTF format, using the union
+exon-based approach. The computed gene lengths are identical to the lengths
+reported by featureCounts (validated for *Homo sapiens*, *Mus musculus*,
+*Rattus norvegicus*, and *Macaca mulatta* of ENSEMBL and UCSC annotations).
 
 Usage
 =====
@@ -67,4 +74,3 @@ Run all tests and linters:
 .. code::
 
     tox
-
