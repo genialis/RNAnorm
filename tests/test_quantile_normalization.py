@@ -48,3 +48,34 @@ def test_quantile_normalization():
     qtX_rounded = np.round(qtX, 2)
     assert np.all(qtX_rounded == manually_computed_qt)  # Test Numpy array
     assert type(qtX) == np.ndarray  # Check Numpy array returned for Python array input
+
+
+def test_quantile_normalization_special():
+    """
+    Test quantile normalization for special cases.
+
+    Check if some special cases are handled the same as in the R implementation.
+    """
+    # tie of more then two numbers
+    x = [[5, 4, 3], [2, 4, 4], [3, 4, 7], [4, 2, 8]]
+    x_man = [[5.67, 5.00, 2.33], [2.33, 5.00, 3.67], [3.67, 5.00, 5.00], [5.00, 2.33, 5.67]]
+    x_qt = np.round(quantile(x), 2)
+    assert np.all(x_qt == x_man)
+
+    # all zeros
+    x = [[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]]
+    x_man = [[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]]
+    x_qt = np.round(quantile(x), 2)
+    assert np.all(x_qt == x_man)
+
+    # rank is all zeros
+    x = [[5, 4, 0], [0, 0, 4], [3, 4, 6], [4, 2, 8]]
+    x_man = [[5.67, 5.17, 0.00], [0.00, 0.00, 3.00], [3.00, 5.17, 4.67], [4.67, 3.00, 5.67]]
+    x_qt = np.round(quantile(x), 2)
+    assert np.all(x_qt == x_man)
+
+    # column is all zeros
+    x = [[0, 4, 3], [0, 1, 4], [0, 4, 6], [0, 2, 8]]
+    x_man = [[2.67, 3.67, 1.33], [2.67, 1.33, 2.00], [2.67, 3.67, 3.33], [2.67, 2.00, 4.00]]
+    x_qt = np.round(quantile(x), 2)
+    assert np.all(x_qt == x_man)
