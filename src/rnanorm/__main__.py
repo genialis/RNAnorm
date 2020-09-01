@@ -42,7 +42,9 @@ def parse_args(args):
     """
     )
     parser.add_argument(
-        "expression", type=str, help="tab-delimited file with gene expression data (genes in rows, samples in cols)",
+        "expression",
+        type=str,
+        help="tab-delimited file with gene expression data (genes in rows, samples in cols)",
     )
     parser.add_argument("--gene-lengths", type=str, help="tab-delimited file with gene lengths")
     parser.add_argument("--annotation", type=str, help="Annotation file in GTF format")

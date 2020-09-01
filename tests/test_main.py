@@ -65,7 +65,7 @@ def test_parse_args():
 
 def test_validate_args():
     """Test for existence check for gene expression file.
-    
+
     Test if validation function raises an exception when gene expression file is missing.
     """
     with pytest.raises(ArgumentValidateException):
@@ -87,9 +87,9 @@ def test_validate_tpm_args(create_expression_files, create_output_files):
 
 def test_normalization_output_success(create_expression_files, create_output_files):
     """Test TPM and CPM output.
-    
-    This test implements the contents of main function and checks if the 
-    normalization outputs are correctly written to files. 
+
+    This test implements the contents of main function and checks if the
+    normalization outputs are correctly written to files.
     """
     expression_path, gene_lengths_path = create_expression_files
     tpm_output_path, cpm_output_path = create_output_files
@@ -130,7 +130,7 @@ def test_normalization_output_success(create_expression_files, create_output_fil
 
 def test_header_validation(create_expression_files, create_output_files):
     """Test header validation in expression file.
-    
+
     Test if expression load function check for existence of FEATURE_ID column.
     """
     expression_path = create_expression_files[0]
