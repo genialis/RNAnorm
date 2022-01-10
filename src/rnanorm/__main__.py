@@ -6,7 +6,7 @@ import sys
 import pandas as pd
 
 from rnanorm.annotation import union_exon_lengths
-from rnanorm.normalization import cpm, quantile, tpm
+from rnanorm.normalization import cpm, fpkm, quantile, tpm
 
 
 class ArgumentValidateException(Exception):
@@ -50,6 +50,7 @@ def parse_args(args):
     parser.add_argument("--annotation", type=str, help="Annotation file in GTF format")
     parser.add_argument("--gene-id-attr", type=str, help="Gene ID attribute for annotation file", default="gene_id")
     parser.add_argument("--tpm-output", type=str, help="TPM output file name")
+    parser.add_argument("--fpkm-output", type=str, help="FPKM output file name")
     parser.add_argument("--cpm-output", type=str, help="CPM output file name")
     parser.add_argument("--quantile-output", type=str, help="Quantile-normalized expression output file name")
     return parser.parse_args(args)
@@ -61,16 +62,17 @@ def validate_args(args):
     gene_lengths_path = args.gene_lengths
     annotation_path = args.annotation
     tpm_output_path = args.tpm_output
+    fpkm_output_path = args.fpkm_output
     cpm_output_path = args.cpm_output
     quantile_output_path = args.quantile_output
 
     if not os.path.exists(expression_path):
         raise ArgumentValidateException(f"Expressions file not found {expression_path}")
 
-    if tpm_output_path:
+    if tpm_output_path or fpkm_output_path:
         # 1. Validate argument consistency
         if gene_lengths_path is None and annotation_path is None:
-            raise ArgumentValidateException("--gene-lengths or --annotation must be given for --tpm-output")
+            raise ArgumentValidateException("--gene-lengths or --annotation must be given")
 
         if gene_lengths_path is not None and annotation_path is not None:
             raise ArgumentValidateException("Only one of --gene-lengths or --annotation must be given")
@@ -81,7 +83,7 @@ def validate_args(args):
         if annotation_path and not os.path.exists(annotation_path):
             raise ArgumentValidateException(f"Annotation file not found {annotation_path}")
 
-    if tpm_output_path is None and cpm_output_path is None and quantile_output_path is None:
+    if all([path is None for path in [tpm_output_path, fpkm_output_path, cpm_output_path, quantile_output_path]]):
         raise NoOutputException
 
 
@@ -139,6 +141,7 @@ def main():
     annotation_path = args.annotation
     gene_id_attr = args.gene_id_attr
     tpm_output_path = args.tpm_output
+    fpkm_output_path = args.fpkm_output
     cpm_output_path = args.cpm_output
     quantile_output_path = args.quantile_output
 
@@ -149,13 +152,19 @@ def main():
             CPM = cpm(expressions)
             CPM.to_csv(cpm_output_path, sep="\t")
 
-        if tpm_output_path:
+        if tpm_output_path or fpkm_output_path:
             if gene_lengths_path:
                 gene_lengths = load_gene_lengths(gene_lengths_path)
             elif annotation_path:
                 gene_lengths = union_exon_lengths(annotation_path, gene_id_attr)
-            TPM = tpm(expressions, gene_lengths)
-            TPM.to_csv(tpm_output_path, sep="\t")
+
+            if tpm_output_path:
+                TPM = tpm(expressions, gene_lengths)
+                TPM.to_csv(tpm_output_path, sep="\t")
+
+            if fpkm_output_path:
+                FPKM = fpkm(expressions, gene_lengths)
+                FPKM.to_csv(fpkm_output_path, sep="\t")
 
         if quantile_output_path:
             QT = quantile(expressions)

@@ -64,6 +64,64 @@ def tpm(X, y):
         return _tpm_ndarray(X, y)
 
 
+def _fpkm_ndarray(X, y):
+    """Normalize Numpy ndarray expression counts to FPKM.
+
+    :type X: Numpy ndarray
+    :type y: Numpy ndarray
+    """
+    assert isinstance(X, np.ndarray)
+    assert isinstance(y, np.ndarray)
+    assert X.shape[0] == y.shape[0]
+    assert y.shape[1] == 1
+    assert np.min(X) >= 0.0  # Gene counts must be non-negative
+
+    total_sample_reads = X.sum(axis=0) / 10 ** 6
+
+    with np.errstate(invalid="ignore"):  # Ignore warnings of division by 0
+        rpm = X / total_sample_reads
+        # Samples with zeros for all genes get nan but should be 0.0
+        np.nan_to_num(rpm, copy=False)
+
+    fpkm = rpm / y * 1000
+
+    return fpkm
+
+
+def fpkm(X, y):
+    """Normalize expression counts to Fragments per kilobase million (FPKM).
+
+    RPM = expressionCount / sumReadsInSample * 1e6
+    FPKM = RPM / geneLengthKb
+
+    :type X: 2-D array_like
+    :type y: 1-D array_like
+    """
+    if isinstance(X, pd.DataFrame) and isinstance(y, pd.DataFrame):
+        common_genes = X.index.intersection(y.index)
+        ncommon = len(common_genes)
+        if ncommon != X.shape[0] or ncommon != y.shape[0]:
+            warnings.warn(
+                f"Geneset mismatch between expressions ({X.shape[0]}) and gene "
+                f"lengths ({y.shape[0]}). Using intersection ({ncommon})...",
+                RuntimeWarning,
+                stacklevel=2,
+            )
+
+        X = X.loc[common_genes]
+        y = y.loc[common_genes]
+
+        X_ = np.asarray(X, dtype=np.float64)
+        y_ = np.asarray(y, dtype=np.float64)
+        FPKM = _fpkm_ndarray(X_, y_)
+
+        return pd.DataFrame(FPKM, index=X.index, columns=X.columns)
+    else:
+        X = np.asarray(X, dtype=np.float64)
+        y = np.asarray(y, dtype=np.float64)
+        return _fpkm_ndarray(X, y)
+
+
 def cpm(X):
     """Normalize expression counts to Counts per million (CPM).
 

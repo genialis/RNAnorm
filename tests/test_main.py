@@ -12,7 +12,7 @@ from rnanorm.__main__ import (
     parse_args,
     validate_args,
 )
-from rnanorm.normalization import cpm, tpm
+from rnanorm.normalization import cpm, fpkm, tpm
 
 
 @pytest.fixture(scope="session")
@@ -44,20 +44,28 @@ def create_expression_files(tmpdir_factory):
 def create_output_files(tmpdir_factory):
     output_dir = tmpdir_factory.mktemp("output")
     tpm_output_path = output_dir.join("expr.tpm.tsv")
+    fpkm_output_path = output_dir.join("expr.fpkm.tsv")
     cpm_output_path = output_dir.join("expr.cpm.tsv")
 
-    return tpm_output_path, cpm_output_path
+    return tpm_output_path, fpkm_output_path, cpm_output_path
 
 
 def test_parse_args():
     """Test argument parser."""
-    cmdline = ["--gene-lengths=lengths.tsv", "--cpm-output=expr.cpm.tsv", "--tpm-output=expr.tpm.tsv", "expr.tsv"]
+    cmdline = [
+        "--gene-lengths=lengths.tsv",
+        "--cpm-output=expr.cpm.tsv",
+        "--tpm-output=expr.tpm.tsv",
+        "--fpkm-output=expr.fpkm.tsv",
+        "expr.tsv",
+    ]
     args = parse_args(cmdline)
 
     checks = [
         args.expression == "expr.tsv",
         args.gene_lengths == "lengths.tsv",
         args.tpm_output == "expr.tpm.tsv",
+        args.fpkm_output == "expr.fpkm.tsv",
         args.cpm_output == "expr.cpm.tsv",
     ]
     assert all(checks)
@@ -85,19 +93,32 @@ def test_validate_tpm_args(create_expression_files, create_output_files):
         validate_args(args)
 
 
+def test_validate_fpkm_args(create_expression_files, create_output_files):
+    """Test for existence of gene lengths file when FPKM normalization type is used."""
+    expression_path = create_expression_files[0]
+    fpkm_output_path = create_output_files[1]
+
+    cmdline = [f"--fpkm-output={fpkm_output_path}", f"{expression_path}"]
+
+    with pytest.raises(ArgumentValidateException):
+        args = parse_args(cmdline)
+        validate_args(args)
+
+
 def test_normalization_output_success(create_expression_files, create_output_files):
-    """Test TPM and CPM output.
+    """Test TPM, FPKM and CPM output.
 
     This test implements the contents of main function and checks if the
     normalization outputs are correctly written to files.
     """
     expression_path, gene_lengths_path = create_expression_files
-    tpm_output_path, cpm_output_path = create_output_files
+    tpm_output_path, fpkm_output_path, cpm_output_path = create_output_files
 
     cmdline = [
         f"--gene-lengths={gene_lengths_path}",
         f"--cpm-output={cpm_output_path}",
         f"--tpm-output={tpm_output_path}",
+        f"--fpkm-output={fpkm_output_path}",
         f"{expression_path}",
     ]
 
@@ -117,6 +138,10 @@ def test_normalization_output_success(create_expression_files, create_output_fil
         gene_lengths = load_gene_lengths(gene_lengths_path)
         TPM = tpm(expressions, gene_lengths)
         TPM.to_csv(tpm_output_path, sep="\t")
+    if fpkm_output_path:
+        gene_lengths = load_gene_lengths(gene_lengths_path)
+        FPKM = fpkm(expressions, gene_lengths)
+        FPKM.to_csv(fpkm_output_path, sep="\t")
 
     # Re-read the values in files and check if they are correct
     manually_computed_CPM = [[23809, 20000], [952380, 950000], [23809, 30000]]
@@ -126,6 +151,10 @@ def test_normalization_output_success(create_expression_files, create_output_fil
     manually_computed_TPM = [[20704, 17400], [959266, 957349], [20029, 25250]]
     TPM = pd.DataFrame(pd.read_csv(tpm_output_path, sep="\t"), columns=["S1", "S2"])
     assert np.all(np.asarray(TPM, dtype=int) == manually_computed_TPM)
+
+    manually_computed_FPKM = [[7936, 6666], [367714, 366795], [7678, 9674]]
+    FPKM = pd.DataFrame(pd.read_csv(fpkm_output_path, sep="\t"), columns=["S1", "S2"])
+    assert np.all(np.asarray(FPKM, dtype=int) == manually_computed_FPKM)
 
 
 def test_header_validation(create_expression_files, create_output_files):

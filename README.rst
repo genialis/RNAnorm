@@ -28,13 +28,15 @@ Normalization of RNA-seq gene expression data. Supported methods:
 
 * Counts per million (CPM)
 * Transcript per kilobase million (TPM)
+* Fragments per kilobase million (FPKM)
 * Quantile normalization to average distribution
 
-The TPM normalization can either accept pre-computed gene lengths on the input
-or compute gene lengths from gene annotation in GTF format, using the union
-exon-based approach. The computed gene lengths are identical to the lengths
-reported by featureCounts (validated for *Homo sapiens*, *Mus musculus*,
-*Rattus norvegicus*, and *Macaca mulatta* of ENSEMBL and UCSC annotations).
+The TPM / FPKM normalization can either accept pre-computed gene lengths
+on the input or compute gene lengths from gene annotation in GTF format,
+using the union exon-based approach. The computed gene lengths are
+identical to the lengths reported by featureCounts (validated for *Homo
+sapiens*, *Mus musculus*, *Rattus norvegicus*, and *Macaca mulatta* of
+ENSEMBL and UCSC annotations).
 
 Quantile normalization is implemented as described on Wikipedia_. First, we
 compute an average distribution by sorting each sample (column) and taking the
