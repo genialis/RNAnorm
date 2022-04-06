@@ -76,7 +76,7 @@ def _fpkm_ndarray(X, y):
     assert y.shape[1] == 1
     assert np.min(X) >= 0.0  # Gene counts must be non-negative
 
-    total_sample_reads = X.sum(axis=0) / 10 ** 6
+    total_sample_reads = X.sum(axis=0) / 10**6
 
     with np.errstate(invalid="ignore"):  # Ignore warnings of division by 0
         rpm = X / total_sample_reads
