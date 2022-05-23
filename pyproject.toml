@@ -12,7 +12,7 @@ author = "Genialis, Inc."
 author-email = "miha@genialis.com"
 home-page="https://github.com/genialis/rnaseq-normalization/"
 description-file = "README.rst"
-requires-python=">=3.6, <3.9"
+requires-python=">=3.6, <3.11"
 requires = [
     "numpy",
     "pandas",
@@ -31,6 +31,8 @@ classifiers = [
     "Programming Language :: Python :: 3.6",
     "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
 ]
 
 [tool.flit.metadata.requires-extra]
