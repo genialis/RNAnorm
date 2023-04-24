@@ -1,57 +1,81 @@
 [build-system]
-requires = ["flit_core >=2,<3"]
-build-backend = "flit_core.buildapi"
-
-[tool.black]
-target-version = ["py38"]
-line-length = 119
-
-[tool.flit.metadata]
-module = "rnanorm"
-author = "Genialis, Inc."
-author-email = "miha@genialis.com"
-home-page="https://github.com/genialis/rnaseq-normalization/"
-description-file = "README.rst"
-requires-python=">=3.6, <3.11"
 requires = [
-    "numpy",
-    "pandas",
-    "scipy",
-    "pybedtools",
+    "setuptools >= 64.0.0",
+    "setuptools_scm >= 6.4.0",
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rnanorm"
+description = "Common RNAseq normalization methods"
+authors = [
+    {name = "Genialis, Inc."},
+    {email = "dev-team@genialis.com"},
+]
+dynamic = ["version"]
+readme = "README.rst"
+license = {text = "Proprietary"}
+requires-python = ">=3.8, <3.11"
+keywords = [
+    "bio",
+    "bioinformatics",
+    "data science",
+    "machine learning",
+    "artificial intelligence",
+    "python",
+    "genialis",
 ]
 classifiers = [
-    "Development Status :: 5 - Production/Stable",
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
     "Intended Audience :: Developers",
-    "Topic :: Software Development :: Libraries :: Application Frameworks",
     "Topic :: Software Development :: Libraries :: Python Modules",
-    "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.6",
-    "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
 ]
+dependencies = [
+    "numpy >= 1.0.0",
+    "pandas >= 1.0.0",
+    "scikit-learn >= 1.0.0",
+    "pandera",
+]
 
-[tool.flit.metadata.requires-extra]
-linters = [
-    "black",
-    "pydocstyle",
-    "isort",
-    "flake8",
+[project.optional-dependencies]
+docs = [
+    "sphinx>=5.1.1",
+    "sphinx-autodoc-typehints>=1.19.2",
+]
+package = [
+    "build>=0.8.0",
+    "check-manifest>=0.48",
+    "twine>=4.0.1",  # Required by tox -e packaging
 ]
 test = [
+    "black",
+    "flake8",
+    "isort",
+    "mypy",
+    "pydocstyle[toml]",
     "pytest",
+    "pytest-cov",
 ]
 
-[tool.flit.scripts]
-rnanorm = "rnanorm.__main__:main"
+[project.urls]
+repository = "https://github.com/genialis/RNAnorm"
+
+[tool.setuptools_scm]
+
+[tool.black]
+target-version = ["py38", "py39", "py310"]
+line-length = 99
 
 [tool.isort]
-line_length = 119
-multi_line_output = 3
-include_trailing_comma = true
-force_grid_wrap = 0
-use_parentheses = true
+profile = "black"
+
+[tool.pydocstyle]
+add-select = "D404"
+add-ignore = "D202"

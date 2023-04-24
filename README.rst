@@ -1,95 +1,57 @@
+====================
+RNAseq normalization
+====================
+
+Python implementation of common RNAseq normalization methods:
+
+- CPM (Counts per million)
+- FPKM (Fragments per kilobase million)
+- TPM (Transcripts per million)
+- UQ (Upper quartile)
+- CUF (Counts adjusted with UQ factors)
+- TMM (Trimmed mean of M-values)
+- CTF (Counts adjusted with TMM factors)
+
+**WARNING**: The content of this repository is under substantial restructuring. Some parts do not work yet and some features are not documented.
+
+
+Installation
+============
+
+This repository is getting as new structure and API. However, it is not
+yet mature enough to be published on Pypi. This means that the usual
+``pip install rnanorm`` will install the old version of ``rnanorm``.
+
+To use the newest code please install from source::
+
+   git clone git@github.com:genialis/RNAnorm.git
+   cd RNAnorm
+   pip install .
+
+
+Normalize from Python
 =====================
-RNA-Seq Normalization
-=====================
 
-|build| |black| |pypi_version| |pypi_pyversions| |pypi_downloads|
+Example::
 
-.. |build| image:: https://github.com/genialis/rnaseq-normalization/workflows/build/badge.svg?branch=master
-    :target: https://github.com/genialis/rnaseq-normalization/actions?query=branch%3Amaster
-    :alt: Build Status
+   import pandas as pd
+   from rnanorm import CPM
 
-.. |black| image:: https://img.shields.io/badge/code%20style-black-000000.svg
-    :target: https://github.com/psf/black
-    :alt: Code Style Black
+   exp_raw = pd.DataFrame({"G1": [100000, 300000], "G2": [400000, 700000]}, index=["S1", "S2"])
+   CPM().fit_transform(exp_raw)
 
-.. |pypi_version| image:: https://img.shields.io/pypi/v/rnanorm.svg
-    :target: https://pypi.org/project/rnanorm
-    :alt: Version on PyPI
 
-.. |pypi_pyversions| image:: https://img.shields.io/pypi/pyversions/rnanorm.svg
-    :target: https://pypi.org/project/rnanorm
-    :alt: Supported Python versions
+Normalize from command line
+===========================
 
-.. |pypi_downloads| image:: https://pepy.tech/badge/rnanorm
-    :target: https://pepy.tech/project/rnanorm
-    :alt: Number of downloads from PyPI
+Coming soon.
 
-Normalization of RNA-seq gene expression data. Supported methods:
-
-* Counts per million (CPM)
-* Transcript per kilobase million (TPM)
-* Fragments per kilobase million (FPKM)
-* Quantile normalization to average distribution
-
-The TPM / FPKM normalization can either accept pre-computed gene lengths
-on the input or compute gene lengths from gene annotation in GTF format,
-using the union exon-based approach. The computed gene lengths are
-identical to the lengths reported by featureCounts (validated for *Homo
-sapiens*, *Mus musculus*, *Rattus norvegicus*, and *Macaca mulatta* of
-ENSEMBL and UCSC annotations).
-
-Quantile normalization is implemented as described on Wikipedia_. First, we
-compute an average distribution by sorting each sample (column) and taking the
-mean over rows to determine the rank values. Second, we compute ranks over
-columns (samples) and substitute the rank with the rank value (average
-expression for each rank).
-
-.. _Wikipedia: https://en.wikipedia.org/wiki/Quantile_normalization
-
-Usage
-=====
-
-Install ``rnanorm`` Python package:
-
-.. code::
-
-    pip install rnanorm
-
-See ``rnanorm`` command help:
-
-.. code::
-
-    rnanorm --help
-
-Run ``rnanorm`` with pre-computed gene lengths:
-
-.. code::
-
-    rnanorm expr.tsv --cpm-output=expr.cpm.tsv --tpm-output=expr.tpm.tsv --gene-lengths=lengths.tsv
-
-Run ``rnanorm`` with genome annotation - gene lengths will be computed on the fly:
-
-.. code::
-
-    rnanorm expr.tsv --cpm-output=expr.cpm.tsv --tpm-output=expr.tpm.tsv --annotation=annot.gtf
-
-For quantile normalization we suggest using TPM expressions on the input:
-
-.. code::
-
-    rnanorm expr.tpm.tsv --quantile-output=expr.quantile.tsv
+.. TODO
 
 Contributing
 ============
 
-Install ``rnanorm`` Python package for development:
+To learn about contributing to the code base, read the  Contributing_ section
+of our documentation.
 
-.. code::
-
-    flit install --deps=all --symlink
-
-Run all tests and linters:
-
-.. code::
-
-    tox
+.. _Contributing: docs/contributing.rst
