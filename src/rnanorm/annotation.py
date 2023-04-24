@@ -1,90 +1,106 @@
-"""Annotation parsing methods."""
+"""GTF file parsing."""
 
-from collections import defaultdict
-from operator import itemgetter
+import io
+from functools import lru_cache
+from pathlib import Path
+from typing import Union
 
 import pandas as pd
-import pybedtools as pbt
-
-GTF_EXTENSIONS = (
-    ".gtf",
-    ".gtf.gz",
-)
 
 
-def _compute_union_exon_length(starts_ends):
-    """Compute gene length based on the union of its exons.
+class GTF:
+    """GTF file parser."""
 
-    Before summing up exon lengths, one needs to merge all overlapping
-    exons. To do this, ``pybedtools.merge()`` could be used, but simple
-    hand-built merge works much faster.
+    def __init__(self, gtf: Union[str, Path]) -> None:
+        """Initialize class.
 
-    This function works only if start_ends is a list of lists. It will
-    not work with list of tuples.
+        :param gtf: GTF file
+        """
+        self.gtf = gtf
 
-    """
-    starts_ends.sort(key=itemgetter(0))
-    merged = [starts_ends[0]]
-    for current in starts_ends:
-        previous = merged[-1]
-        if current[0] <= previous[1]:
-            previous[1] = max(previous[1], current[1])
+    @property
+    def length(self) -> pd.Series:
+        """Gene length by union exon length model."""
+        return self.get_df()["gene_length"]
+
+    @lru_cache()
+    def get_df(self) -> pd.DataFrame:
+        """Load data from disc or fetch it from server and cache it on disc."""
+        if "check if this is on disk" == "true":  # type: ignore
+            gtf_df = pd.DataFrame()
         else:
-            merged.append(current)
+            gtf_df = self._parse_gtf(self.gtf)
 
-    return sum(end - start for (start, end) in merged)
+            # Compute gene length
+            gene_length_df = self._gene_length(gtf_df)
 
+            # Use only rows that represent genes
+            gtf_df = gtf_df[gtf_df["feature_type"] == "gene"]
+            gtf_df = gtf_df.drop(columns=["feature_type", "strand", "start", "end"])
+            gtf_df["gene_length"] = gene_length_df
 
-def union_exon_lengths(annotation, gene_id_attr="gene_id"):
-    """Compute gene lengths based on union exon model of genome annotation.
+        return gtf_df
 
-    Group exon start & end coordinates by gene ID (level 1) and chrom &
-    strand (level 2). Then perfrom merge and length calculation for each
-    chrom & strand separately. The latter is needed since
-    ``gene_id_attr`` is not unique in some annotations (e.g. RefSeq).
+    @staticmethod
+    def _parse_gtf(file: Union[io.BytesIO, str, Path]) -> pd.DataFrame:
+        """Parse GTF file."""
 
-    This function is confirmed to produce identical output as
-    featureCounts output (column "Length") for the following species /
-    annotations:
+        # Read columns we need: 0=chromosome, 2=feature type, 3=genomic start
+        # location, 4=genomic stop location, 6=genomic strand, 8=attributes
+        df = pd.read_csv(
+            file,
+            sep="\t",
+            comment="#",
+            header=None,
+            usecols=[0, 2, 3, 4, 6, 8],
+            low_memory=False,
+        )
 
-      - Homo sapiens:
-        - UCSC hg19
-        - UCSC hg38
-        - ENSEMBL 92
-        - ENSEMBL 100
-      - Mus musculus:
-        - UCSC mm10
-        - ENSEMBL 92
-        - ENSEMBL 100
-      - Rattus norvegicus:
-        - UCSC rn6
-        - ENSEMBL 92
-        - ENSEMBL 100
-      - Macaca mulatta:
-        - ENSEMBL 97
-        - ENSEMBL 100
+        return pd.DataFrame(
+            {
+                "feature_type": df[2],
+                "gene_id": df[8].str.extract(r'gene_id "(.+?)"', expand=False).values,
+                "gene_name": df[8].str.extract(r'gene_name "(.+?)"', expand=False).values,
+                "chromosome": df[0],
+                "strand": df[6],
+                "start": df[3],
+                "end": df[4] + 1,  # Note: GTF is 1-based and includes stop position
+            },
+        ).set_index("gene_id")
 
-    """
-    if not annotation.endswith(GTF_EXTENSIONS):
-        raise ValueError(f"Input file ({annotation}) should be in GTF format")
+    def _gene_length(self, gtf_df: pd.DataFrame, gene_id_attr: str = "gene_id") -> pd.Series:
+        """Compute gene lengths based on union exon model of genome
+        annotation.
 
-    data = defaultdict(lambda: defaultdict(list))
-    for segment in pbt.BedTool(annotation):
-        if segment[2] != "exon":
-            continue
-        if gene_id_attr not in segment.attrs:
-            raise ValueError(
-                "Gene ID attribute is missing in the segment {segment[:]}. Please "
-                "supply correct gene ID attribute with --gene-id-attr parameter."
-            )
+        Group exon start & end coordinates by gene ID & chromosome &
+        strand. Then perfrom merge and length calculation for each
+        group separately. The latter is needed since ``gene_id_attr``
+        is not unique in some annotations (e.g. RefSeq).
+        """
+        gtf_df = gtf_df[gtf_df["feature_type"] == "exon"]
 
-        data[segment.attrs[gene_id_attr]][(segment.chrom, segment.strand)].append([segment.start, segment.end])
+        group_exons = gtf_df.groupby([gene_id_attr, "chromosome", "strand"])[["start", "end"]]
+        group_length = group_exons.apply(self._compute_union_exon_length)
 
-    gene_lengths = defaultdict(int)
-    for gene_id, by_chrom_strand in data.items():
-        for starts_ends in by_chrom_strand.values():
-            gene_lengths[gene_id] += _compute_union_exon_length(starts_ends)
+        gene_length = group_length.groupby(gene_id_attr).sum()
 
-    df = pd.DataFrame.from_dict(gene_lengths, orient="index", columns=["GENE_LENGTHS"])
-    df.index.names = ["FEATURE_ID"]
-    return df
+        return gene_length
+
+    def _compute_union_exon_length(self, starts_ends: pd.DataFrame) -> pd.Series:
+        """Compute gene length based on the union of its exons.
+
+        Before summing up exon lengths, one needs to merge all
+        overlapping exons.
+        """
+        exons = starts_ends.values
+        exons = exons[exons[:, 0].argsort()]
+        length = 0  # length of a rolling union of exons
+        end = -1  # end of the rolling union of exons
+        for exon in exons:
+            if exon[1] > end:
+                if exon[0] > end:
+                    length += exon[1] - exon[0]
+                else:
+                    length += exon[1] - end
+                end = exon[1]
+        return length
