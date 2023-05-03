@@ -25,7 +25,6 @@ extensions = [
     "sphinx_autodoc_typehints",
     "sphinx.ext.intersphinx",
     "sphinx.ext.viewcode",
-    "sphinxcontrib.confluencebuilder",
 ]
 
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
