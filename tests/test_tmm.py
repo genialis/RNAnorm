@@ -1,32 +1,45 @@
 import numpy as np
+import pandas as pd
 import pytest
 
 from rnanorm import TMM
 
 
-def test_tmm(between_sample_data):
-    """Test TMM normalization."""
-    data, expected_factors, expected_data, _ = between_sample_data
+@pytest.fixture
+def expected_tmm(exp):
+    return pd.DataFrame(
+        [
+            [20000, 30000, 50000, 200000, 700000],
+            [20000, 30000, 50000, 200000, 700000],
+            [20000, 30000, 50000, 200000, 1700000],
+            [20000, 30000, 50000, 200000, 200000],
+        ],
+        index=exp.index,
+        columns=exp.columns,
+        dtype=np.float64,
+    )
 
+
+def test_tmm(exp, expected_factors, expected_tmm):
+    # Simple case: Fit some data, transform same data.
     transformer = TMM()
-    transformer.fit(data)
-    factors = transformer.get_norm_factors(data)
-    transformed_data = transformer.transform(data)
+    transformer.fit(exp)
+    factors = transformer.get_norm_factors(exp)
+    transformed_data = transformer.transform(exp)
 
-    assert data.shape == transformed_data.shape
-    np.testing.assert_allclose(transformed_data, expected_data, rtol=1e-4)
-    # Geometric mean of factors is 1:
-    assert np.exp(np.mean(np.log(factors))) == pytest.approx(1)
     np.testing.assert_allclose(factors, expected_factors, rtol=1e-4)
+    np.testing.assert_allclose(transformed_data, expected_tmm, rtol=1e-4)
 
     # Advanced case: Fit some samples, transform different ones.
-    transformer.fit(data.iloc[1:])
-    factors = transformer.get_norm_factors(data.iloc[:1])
-    transformed_data = transformer.transform(data.iloc[:1])
+    samples_to_fit = ["S1", "S3", "S4"]
+    exp1 = exp.loc[samples_to_fit]
+    transformer.fit(exp1)
+    factors = transformer.get_norm_factors(exp1)
+    transformed_data = transformer.transform(exp.loc[["S2"]])
 
-    np.testing.assert_allclose(factors, [1.4142], rtol=1e-4)
+    np.testing.assert_allclose(factors, [1, 0.5, 2.0], rtol=1e-4)
     np.testing.assert_allclose(
         transformed_data,
-        np.array([[0.0, 63.64, 636.4, 6364, 63640, 636400]]),
+        expected_tmm.loc[["S2"]],
         rtol=1e-3,
     )

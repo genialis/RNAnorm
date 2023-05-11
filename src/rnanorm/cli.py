@@ -49,7 +49,7 @@ class CLWrapper:
             elif not Path(out.name).parent.exists():
                 Path(out.name).parent.mkdir(parents=True)
 
-        result.index.name = "sample_id"
+        # result.index.name = "sample_id"
         result.to_csv(out)
 
 

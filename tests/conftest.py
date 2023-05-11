@@ -2,103 +2,46 @@ import numpy as np
 import pandas as pd
 import pytest
 
+N_SAMPLES = 4
+N_GENES = 5
+
 
 @pytest.fixture
-def between_sample_data():
-    """Toy, example data for between sample normalization."""
-    n_samples = 3
-    n_genes = 6
-    genes = [f"G{i + 1}" for i in range(n_genes)]
-    samples = [f"S{i + 1}" for i in range(n_samples)]
-
-    data = pd.DataFrame(
+def exp():
+    return pd.DataFrame(
         [
-            # S1, lib_size = 11.111
-            [0, 1, 10, 100, 1000, 10000],
-            # Same as S1, but double all the counts, lib_size = 22.222
-            # This needs normalization by library size (CPM)
-            [0, 2, 20, 200, 2000, 20000],
-            # Same as S1, only one gene is super higher so that lib_size = S2
-            # This one needs correction of effective library size
-            [0, 1, 10, 100, 1000, 21111],
+            [200, 300, 500, 2000, 7000],  # The ref sample
+            [400, 600, 1000, 4000, 14000],  # Doubled all counts of ref
+            [200, 300, 500, 2000, 17000],  # Doubled library size of ref
+            [200, 300, 500, 2000, 2000],  # Halved library size of ref
         ],
-        index=samples,
-        columns=genes,
+        index=[f"S{i}" for i in range(1, N_SAMPLES + 1)],
+        columns=[f"G{i}" for i in range(1, N_GENES + 1)],
         dtype=np.float64,
-    )
-
-    expected_norm_factors = pd.Series([1.2599, 1.2599, 0.62996], index=samples)
-
-    expected_data1 = pd.DataFrame(
-        [
-            [0, 71.4337, 714.337, 7143.37, 71433.7, 714337],
-            [0, 71.4337, 714.337, 7143.37, 71433.7, 714337],
-            [0, 71.4337, 714.337, 7143.37, 71433.7, 1508038],
-        ],
-        index=samples,
-        columns=genes,
-        dtype=np.float64,
-    )
-
-    expected_data2 = pd.DataFrame(
-        [
-            [0.0, 0.793701, 7.937005, 79.370053, 793.700, 7937],
-            [0.0, 1.5874, 15.874, 158.74, 1587.4, 15874],
-            [0.0, 1.5874, 15.874, 158.74, 1587.4, 33511],
-        ],
-        index=samples,
-        columns=genes,
-        dtype=np.float64,
-    )
-    return (
-        data,
-        expected_norm_factors,
-        expected_data1,
-        expected_data2,
     )
 
 
 @pytest.fixture
 def gtf_file(tmp_path):
-    # This is first gene in ENSEMBL 92
     data = [
         ["#!genome-build GRCh38.p12"],
         ["#!genome-version GRCh38"],
-        ["#!genome-date 2013-12"],
-        ["#!genome-build-accession NCBI:GCA_000001405.27"],
-        ["#!genebuild-last-updated 2018-01"],
-        ["1", "havana", "gene", "11869", "14409", ".", "+", ".", 'gene_id "ENSG00000223972";'],
-        [
-            "1",
-            "havana",
-            "transcript",
-            "11869",
-            "14409",
-            ".",
-            "+",
-            ".",
-            'gene_id "ENSG00000223972";',
-        ],
-        ["1", "havana", "exon", "11869", "12227", ".", "+", ".", 'gene_id "ENSG00000223972";'],
-        ["1", "havana", "exon", "12613", "12721", ".", "+", ".", 'gene_id "ENSG00000223972";'],
-        ["1", "havana", "exon", "13221", "14409", ".", "+", ".", 'gene_id "ENSG00000223972";'],
-        [
-            "1",
-            "havana",
-            "transcript",
-            "12010",
-            "13670",
-            ".",
-            "+",
-            ".",
-            'gene_id "ENSG00000223972";',
-        ],
-        ["1", "havana", "exon", "12010", "12057", ".", "+", ".", 'gene_id "ENSG00000223972";'],
-        ["1", "havana", "exon", "12179", "12227", ".", "+", ".", 'gene_id "ENSG00000223972";'],
-        ["1", "havana", "exon", "12613", "12697", ".", "+", ".", 'gene_id "ENSG00000223972";'],
-        ["1", "havana", "exon", "12975", "13052", ".", "+", ".", 'gene_id "ENSG00000223972";'],
-        ["1", "havana", "exon", "13221", "13374", ".", "+", ".", 'gene_id "ENSG00000223972";'],
-        ["1", "havana", "exon", "13453", "13670", ".", "+", ".", 'gene_id "ENSG00000223972";'],
+        # Gene 1 - just one exon
+        ["1", ".", "gene", "1001", "1200", ".", "+", ".", 'gene_id "G1";'],
+        ["1", ".", "exon", "1001", "1200", ".", "+", ".", 'gene_id "G1";'],
+        # Gene 2 - two exons
+        ["1", ".", "gene", "2001", "3000", ".", "+", ".", 'gene_id "G2";'],
+        ["1", ".", "exon", "2001", "2200", ".", "+", ".", 'gene_id "G2";'],
+        ["1", ".", "exon", "2901", "3000", ".", "+", ".", 'gene_id "G2";'],
+        # Gene 3 - two exons on the opposite strand of Gene 2
+        ["1", ".", "gene", "2001", "3000", ".", "-", ".", 'gene_id "G3";'],
+        ["1", ".", "exon", "2001", "2400", ".", "-", ".", 'gene_id "G3";'],
+        ["1", ".", "exon", "2901", "3000", ".", "-", ".", 'gene_id "G3";'],
+        # Gene 4 - two overlapping exons
+        ["1", ".", "gene", "2001", "3000", ".", "+", ".", 'gene_id "G4";'],
+        ["1", ".", "exon", "2001", "2700", ".", "+", ".", 'gene_id "G4";'],
+        ["1", ".", "exon", "2501", "3000", ".", "+", ".", 'gene_id "G4";'],
+        # Gene 5 is deliberately missing
     ]
 
     gtf_path = tmp_path / "annotation.gtf"
@@ -107,3 +50,8 @@ def gtf_file(tmp_path):
             handle.write("\t".join(row) + "\n")
 
     return gtf_path
+
+
+@pytest.fixture
+def expected_factors():
+    return [1.0, 1.0, 0.5, 2.0]

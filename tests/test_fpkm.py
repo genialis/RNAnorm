@@ -2,16 +2,16 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from rnanorm import TPM
+from rnanorm import FPKM
 
 
 @pytest.fixture
 def expected(exp):
     return pd.DataFrame(
         [
-            [200000, 200000, 200000, 400000, np.nan],
-            [200000, 200000, 200000, 400000, np.nan],
-            [200000, 200000, 200000, 400000, np.nan],
+            [100000, 100000, 100000, 200000, np.nan],
+            [100000, 100000, 100000, 200000, np.nan],
+            [50000, 50000, 50000, 100000, np.nan],
             [200000, 200000, 200000, 400000, np.nan],
         ],
         columns=exp.columns,
@@ -20,8 +20,8 @@ def expected(exp):
     )
 
 
-def test_tpm(exp, expected, gtf_file):
-    transformer = TPM(gtf=gtf_file)
+def test_fpkm(exp, expected, gtf_file):
+    transformer = FPKM(gtf=gtf_file)
 
     # Default output is np.ndarray
     with pytest.warns(UserWarning, match=r"X contains .* genes that are not ."):
