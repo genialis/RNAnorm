@@ -20,3 +20,6 @@ __pycache__
 
 # Ignore pytest cache.
 .pytest_cache
+
+# Ignore coverage file
+.coverage
