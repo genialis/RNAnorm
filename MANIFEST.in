@@ -1,5 +1,4 @@
 include tox.ini
+include .readthedocs.yaml
 recursive-include docs *.py *.rst
-recursive-exclude docs/generated *.rst
-recursive-exclude docs/build *.css
 recursive-include tests *.py
