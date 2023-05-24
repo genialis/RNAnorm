@@ -23,3 +23,6 @@ __pycache__
 
 # Ignore coverage file
 .coverage
+
+# Ignore sphinx files
+docs/generated/

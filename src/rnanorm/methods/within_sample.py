@@ -12,15 +12,30 @@ from .utils import LibrarySize
 
 
 class CPM(FunctionTransformer):
-    """Normalize raw counts with CPM (Counts per million).
+    """Counts per million (CPM) normalization.
 
-    :param validate: If true, convert X to Numpy array and make
-        various checks (2D matrix, non-empty, all values are finite)
-        NaN values are not allowed.
+    :param allow_nan: If true, allow X to contain NaN values.
+
+    .. rubric:: Examples
+
+    >>> from rnanorm.datasets import load_rnaseq_toy
+    >>> from rnanorm import CPM
+    >>> X = load_rnaseq_toy().exp
+    >>> X
+    array([[  200.,   300.,   500.,  2000.,  7000.],
+           [  400.,   600.,  1000.,  4000., 14000.],
+           [  200.,   300.,   500.,  2000., 17000.],
+           [  200.,   300.,   500.,  2000.,  2000.]])
+    >>> CPM().fit_transform(X)
+    array([[ 20000.,  30000.,  50000., 200000., 700000.],
+           [ 20000.,  30000.,  50000., 200000., 700000.],
+           [ 10000.,  15000.,  25000., 100000., 850000.],
+           [ 40000.,  60000., 100000., 400000., 400000.]])
 
     """
 
     def __init__(self, allow_nan: bool = False) -> None:
+        """Initialize class."""
         self.allow_nan = allow_nan
         super().__init__(
             self._func,
@@ -63,6 +78,7 @@ class BaseNormalizationWithGTF(FunctionTransformer):
     """Normalize raw counts."""
 
     def __init__(self, gtf: Union[str, Path]) -> None:
+        """Initialize class."""
         self.gtf = gtf
         super().__init__(
             func=self._func,
@@ -87,9 +103,28 @@ class BaseNormalizationWithGTF(FunctionTransformer):
 
 
 class FPKM(BaseNormalizationWithGTF):
-    """Normalize raw counts with FKPM (Fragments per kilo-base million).
+    """Fragments per kilo-base million (FKPM) normalization.
 
-    :param build: Genome build used when assigning counts to each gene
+    :param gtf: GTF file used when assigning counts to each gene
+
+    .. rubric:: Examples
+
+    >>> from rnanorm.datasets import load_rnaseq_toy
+    >>> from rnanorm import FPKM
+    >>> dataset = load_rnaseq_toy(as_frame=True)
+    >>> dataset.exp
+           G1     G2      G3      G4       G5
+    S1  200.0  300.0   500.0  2000.0   7000.0
+    S2  400.0  600.0  1000.0  4000.0  14000.0
+    S3  200.0  300.0   500.0  2000.0  17000.0
+    S4  200.0  300.0   500.0  2000.0   2000.0
+    >>> fpkm = FPKM(gtf=dataset.gtf_path).set_output(transform="pandas")
+    >>> fpkm.fit_transform(dataset.exp)
+              G1        G2        G3        G4        G5
+    S1  100000.0  100000.0  100000.0  200000.0  700000.0
+    S2  100000.0  100000.0  100000.0  200000.0  700000.0
+    S3   50000.0   50000.0   50000.0  100000.0  850000.0
+    S4  200000.0  200000.0  200000.0  400000.0  400000.0
 
     """
 
@@ -99,9 +134,26 @@ class FPKM(BaseNormalizationWithGTF):
 
 
 class TPM(BaseNormalizationWithGTF):
-    """Normalize raw counts with TPM (Transcripts per kilo-base million).
+    """Transcripts per kilo-base million (TPM) normalization.
 
-    :param build: Genome build used when assigning counts to each gene
+    .. rubric:: Examples
+
+    >>> from rnanorm.datasets import load_rnaseq_toy
+    >>> from rnanorm import TPM
+    >>> dataset = load_rnaseq_toy(as_frame=True)
+    >>> dataset.exp
+           G1     G2      G3      G4       G5
+    S1  200.0  300.0   500.0  2000.0   7000.0
+    S2  400.0  600.0  1000.0  4000.0  14000.0
+    S3  200.0  300.0   500.0  2000.0  17000.0
+    S4  200.0  300.0   500.0  2000.0   2000.0
+    >>> tpm = TPM(gtf=dataset.gtf_path).set_output(transform="pandas")
+    >>> tpm.fit_transform(dataset.exp)
+               G1         G2         G3         G4         G5
+    S1   83333.33   83333.33   83333.33  166666.66  583333.33
+    S2   83333.33   83333.33   83333.33  166666.66  583333.33
+    S3   45454.54   45454.54   45454.54   90909.09  772727.27
+    S4  142857.14  142857.14  142857.14  285714.28  285714.28
 
     """
 

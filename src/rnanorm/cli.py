@@ -1,3 +1,4 @@
+"""Command line interface."""
 import functools
 import io
 import sys
@@ -17,6 +18,7 @@ class CLWrapper:
     """Input / output wrapper around normalization methods."""
 
     def __init__(self, method: method_type, **kwargs: Any) -> None:
+        """Initialize class."""
         self.method = method
         self.kwargs = kwargs
 
@@ -54,6 +56,8 @@ class CLWrapper:
 
 
 def common_params(func: Callable[..., Any]) -> Callable[..., Any]:
+    """Set common parameters for all normalization methods."""
+
     @click.argument("exp", type=click.File("r"), default=sys.stdin)
     @click.option(
         "--out",
@@ -70,6 +74,8 @@ def common_params(func: Callable[..., Any]) -> Callable[..., Any]:
 
 
 def gtf_param(func: Callable[..., Any]) -> Callable[..., Any]:
+    """Set parameters for normalization methods that require a GTF file."""
+
     @click.option(
         "--gtf",
         type=click.File("r"),
@@ -84,6 +90,8 @@ def gtf_param(func: Callable[..., Any]) -> Callable[..., Any]:
 
 
 def tmm_params(func: Callable[..., Any]) -> Callable[..., Any]:
+    """Set parameters for TMM and CTF normalization."""
+
     @click.option("--m_trim", default=0.3, help="Two sided cutoff for M-values")
     @click.option("--a_trim", default=0.05, help="Two sided cutoff for A-values")
     @functools.wraps(func)
@@ -96,6 +104,7 @@ def tmm_params(func: Callable[..., Any]) -> Callable[..., Any]:
 @click.command()
 @common_params
 def cpm(exp: pd.DataFrame, out: out_type, force: bool) -> None:
+    """Compute CPM."""
     CLWrapper(CPM).handle(exp, out, force)
 
 
@@ -103,6 +112,7 @@ def cpm(exp: pd.DataFrame, out: out_type, force: bool) -> None:
 @common_params
 @gtf_param
 def fpkm(exp: pd.DataFrame, out: out_type, force: bool, gtf: io.TextIOWrapper) -> None:
+    """Compute FPKM."""
     CLWrapper(FPKM, gtf=gtf).handle(exp, out, force)
 
 
@@ -110,18 +120,21 @@ def fpkm(exp: pd.DataFrame, out: out_type, force: bool, gtf: io.TextIOWrapper) -
 @common_params
 @gtf_param
 def tpm(exp: pd.DataFrame, out: out_type, force: bool, gtf: io.TextIOWrapper) -> None:
+    """Compute TPM."""
     CLWrapper(TPM, gtf=gtf).handle(exp, out, force)
 
 
 @click.command()
 @common_params
 def uq(exp: pd.DataFrame, out: out_type, force: bool) -> None:
+    """Compute UQ."""
     CLWrapper(UQ).handle(exp, out, force)
 
 
 @click.command()
 @common_params
 def cuf(exp: pd.DataFrame, out: out_type, force: bool) -> None:
+    """Compute CUF."""
     CLWrapper(CUF).handle(exp, out, force)
 
 
@@ -129,6 +142,7 @@ def cuf(exp: pd.DataFrame, out: out_type, force: bool) -> None:
 @common_params
 @tmm_params
 def tmm(exp: pd.DataFrame, out: out_type, force: bool, m_trim: float, a_trim: float) -> None:
+    """Compute TMM."""
     CLWrapper(TMM, m_trim=m_trim, a_trim=a_trim).handle(exp, out, force)
 
 
@@ -136,11 +150,13 @@ def tmm(exp: pd.DataFrame, out: out_type, force: bool, m_trim: float, a_trim: fl
 @common_params
 @tmm_params
 def ctf(exp: pd.DataFrame, out: out_type, force: bool, m_trim: float, a_trim: float) -> None:
+    """Compute CTF."""
     CLWrapper(CTF, m_trim=m_trim, a_trim=a_trim).handle(exp, out, force)
 
 
 @click.group()
 def main() -> None:
+    """Define main entry point for CLI."""
     pass
 
 

@@ -30,7 +30,7 @@ def geometric_mean(x: Numeric1D) -> float:
 class UQ(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
     """Upper quartile (UQ) normalization.
 
-    Sometime in RNAseq a small number of genes are very highly expressed in
+    Sometimes in RNAseq a small number of genes are very highly expressed in
     some samples but not in others. This can artificially inflate library size
     and therefore (after library size normalization) cause the remaining genes
     to be considered under-sampled in those samples. Unless this effect is
@@ -46,15 +46,29 @@ class UQ(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
         - Use raw counts
         - Compute scaling factors
             - Remove genes that have zero counts in all samples
-            - Scaling factor for each sample = 75% percentile count
+            - Scaling factor for each sample is the 75-th percentile
             - Rescale factors so that their geometric mean is 1
         - "Adjusted library size" = library size * normalization factors
         - Compute CPM normalization with "Adjusted library size"
 
+    .. rubric:: Examples
+
+    >>> from rnanorm.datasets import load_rnaseq_toy
+    >>> from rnanorm import UQ
+    >>> X = load_rnaseq_toy().exp
+    >>> X
+    array([[  200.,   300.,   500.,  2000.,  7000.],
+           [  400.,   600.,  1000.,  4000., 14000.],
+           [  200.,   300.,   500.,  2000., 17000.],
+           [  200.,   300.,   500.,  2000.,  2000.]])
+    >>> UQ().fit_transform(X)
+    array([[  20000.,   30000.,   50000.,  200000.,  700000.],
+           [  20000.,   30000.,   50000.,  200000.,  700000.],
+           [  20000.,   30000.,   50000.,  200000., 1700000.],
+           [  20000.,   30000.,   50000.,  200000.,  200000.]])
+
     """
 
-    # XXX; Could we cache this? It is called in fit and again in transform.
-    # But it is hard to cache numpy arrays
     def _get_norm_factors(self, X: Numeric2D) -> Numeric1D:
         """Get UQ normalization factors (un-normalized with geometric mean).
 
@@ -118,7 +132,7 @@ class UQ(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
 
 
 class CUF(UQ):
-    """Counts adjusted with Upper quartile factors (CUF) normalization.
+    """Counts adjusted with Upper quartile factors normalization.
 
     Procedure for normalization is described in `Johnson & Krishnan, 2022
     <https://genomebiology.biomedcentral.com/articles/10.1186/s13059-021-02568-9>`_,
@@ -126,6 +140,22 @@ class CUF(UQ):
 
         - Compute normalization factors same as in UpperQuartile
         - Divide raw counts with these factors
+
+    .. rubric:: Examples
+
+    >>> from rnanorm.datasets import load_rnaseq_toy
+    >>> from rnanorm import CUF
+    >>> X = load_rnaseq_toy().exp
+    >>> X
+    array([[  200.,   300.,   500.,  2000.,  7000.],
+           [  400.,   600.,  1000.,  4000., 14000.],
+           [  200.,   300.,   500.,  2000., 17000.],
+           [  200.,   300.,   500.,  2000.,  2000.]])
+    >>> CUF().fit_transform(X)
+    array([[  200.,   300.,   500.,  2000.,  7000.],
+           [  400.,   600.,  1000.,  4000., 14000.],
+           [  400.,   600.,  1000.,  4000., 34000.],
+           [  100.,   150.,   250.,  1000.,  1000.]])
 
     """
 
@@ -174,17 +204,26 @@ class TMM(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
     :param a_trim: Keep genes that are within
         (``a_trim``, 1 - ``a_trim``) percentile of A-values.
 
+    .. rubric:: Examples
+
+    >>> from rnanorm.datasets import load_rnaseq_toy
+    >>> from rnanorm import TMM
+    >>> X = load_rnaseq_toy().exp
+    >>> X
+    array([[  200.,   300.,   500.,  2000.,  7000.],
+           [  400.,   600.,  1000.,  4000., 14000.],
+           [  200.,   300.,   500.,  2000., 17000.],
+           [  200.,   300.,   500.,  2000.,  2000.]])
+    >>> TMM().fit_transform(X)
+    array([[  20000.,   30000.,   50000.,  200000.,  700000.],
+           [  20000.,   30000.,   50000.,  200000.,  700000.],
+           [  20000.,   30000.,   50000.,  200000., 1700000.],
+           [  20000.,   30000.,   50000.,  200000.,  200000.]])
+
     """
 
     def __init__(self, m_trim: float = 0.3, a_trim: float = 0.05) -> None:
-        """Initialize parameters.
-
-        :param m_trim: Keep genes that are within
-            (``m_trim``, 1 - ``m_trim``) percentile of M-values.
-        :param a_trim: Keep genes that are within
-            (``a_trim``, 1 - ``a_trim``) percentile of A-values.
-
-        """
+        """Initialize class."""
         self.m_trim = m_trim
         self.a_trim = a_trim
 
@@ -312,6 +351,27 @@ class CTF(TMM):
 
         - Compute normalization factors same as in TMM
         - Divide raw counts with these factors
+
+    :param m_trim: Keep genes that are within
+        (``m_trim``, 1 - ``m_trim``) percentile of M-values.
+    :param a_trim: Keep genes that are within
+        (``a_trim``, 1 - ``a_trim``) percentile of A-values.
+
+    .. rubric:: Examples
+
+    >>> from rnanorm.datasets import load_rnaseq_toy
+    >>> from rnanorm import CTF
+    >>> X = load_rnaseq_toy().exp
+    >>> X
+    array([[  200.,   300.,   500.,  2000.,  7000.],
+           [  400.,   600.,  1000.,  4000., 14000.],
+           [  200.,   300.,   500.,  2000., 17000.],
+           [  200.,   300.,   500.,  2000.,  2000.]])
+    >>> CTF().fit_transform(X)
+    array([[  200.,   300.,   500.,  2000.,  7000.],
+           [  400.,   600.,  1000.,  4000., 14000.],
+           [  400.,   600.,  1000.,  4000., 34000.],
+           [  100.,   150.,   250.,  1000.,  1000.]])
 
     """
 
