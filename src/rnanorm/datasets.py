@@ -3,19 +3,16 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from sklearn.utils import Bunch
 
 
-class Dataset:
-    exp = pd.DataFrame()
-    gtf_path = Path()
+def load_rnaseq_toy(as_frame=False):
+    """Load an artificial toy dataset representative of RNAseq data."""
 
+    ds = Bunch()
 
-def load_example() -> Dataset:
-    """Load minimal example dataset with expressions and a GTF file."""
-    ds = Dataset()
-
-    # Define expressions matrix
-    ds.exp = pd.DataFrame(
+    # Define expression matrix
+    exp = pd.DataFrame(
         [
             [200, 300, 500, 2000, 7000],  # The ref sample
             [400, 600, 1000, 4000, 14000],  # Doubled all counts of ref
@@ -26,6 +23,9 @@ def load_example() -> Dataset:
         columns=[f"G{i}" for i in range(1, 6)],
         dtype=np.float64,
     )
+    if not as_frame:
+        exp = exp.to_numpy()
+    ds.exp = exp
 
     # GTF file
     gtf_data = [
