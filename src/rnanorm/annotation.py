@@ -21,23 +21,19 @@ class GTF:
     @property
     def length(self) -> pd.Series:
         """Gene length by union exon length model."""
-        return self.get_df()["gene_length"]
+        return self._get_df()["gene_length"]
 
     @lru_cache()
-    def get_df(self) -> pd.DataFrame:
+    def _get_df(self) -> pd.DataFrame:
         """Load data from disc or fetch it from server and cache it on disc."""
-        if "check if this is on disk" == "true":  # type: ignore
-            gtf_df = pd.DataFrame()
-        else:
-            gtf_df = self._parse_gtf(self.gtf)
+        gtf_df = self._parse_gtf(self.gtf)
 
-            # Compute gene length
-            gene_length_df = self._gene_length(gtf_df)
+        # Compute gene length
+        gene_length_df = self._gene_length(gtf_df)
 
-            # Use only rows that represent genes
-            gtf_df = gtf_df[gtf_df["feature_type"] == "gene"]
-            gtf_df = gtf_df.drop(columns=["feature_type", "strand", "start", "end"])
-            gtf_df["gene_length"] = gene_length_df
+        # Use only rows that represent genes
+        gtf_df = gtf_df[gtf_df["feature_type"] == "gene"]
+        gtf_df["gene_length"] = gene_length_df
 
         return gtf_df
 
@@ -69,8 +65,7 @@ class GTF:
         ).set_index("gene_id")
 
     def _gene_length(self, gtf_df: pd.DataFrame, gene_id_attr: str = "gene_id") -> pd.Series:
-        """Compute gene lengths based on union exon model of genome
-        annotation.
+        """Compute gene lengths based on union exon model.
 
         Group exon start & end coordinates by gene ID & chromosome &
         strand. Then perfrom merge and length calculation for each

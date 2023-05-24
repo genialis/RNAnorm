@@ -1,3 +1,4 @@
+"""Datasets."""
 import tempfile
 from pathlib import Path
 
@@ -6,8 +7,28 @@ import pandas as pd
 from sklearn.utils import Bunch
 
 
-def load_rnaseq_toy(as_frame=False):
-    """Load an artificial toy dataset representative of RNAseq data."""
+def load_rnaseq_toy(as_frame: bool = False) -> Bunch:
+    """
+    Load an artificial toy dataset representative of RNAseq data.
+
+    :param as_frame: Return expression as pandas.DataFrame instead of Numpy
+                     array.
+
+    .. rubric:: Examples
+
+    >>> from rnanorm.datasets import load_rnaseq_toy
+    >>> dataset = load_rnaseq_toy()
+    >>> dataset.exp
+    array([[  200.,   300.,   500.,  2000.,  7000.],
+           [  400.,   600.,  1000.,  4000., 14000.],
+           [  200.,   300.,   500.,  2000., 17000.],
+           [  200.,   300.,   500.,  2000.,  2000.]])
+    >>> # This can be used for TPM and FPKM normalization
+    >>> # since they require GTF file
+    >>> dataset.gtf_path
+    PosixPath('/var/folders/tmp8odklw36/example.gtf')
+
+    """
 
     ds = Bunch()
 

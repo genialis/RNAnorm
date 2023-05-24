@@ -21,6 +21,7 @@ copyright = "2023, " + author
 
 extensions = [
     "sphinx.ext.autodoc",
+    "sphinx.ext.autosummary",
     "sphinx.ext.doctest",
     "sphinx_autodoc_typehints",
     "sphinx.ext.intersphinx",

@@ -5,6 +5,7 @@ Welcome to RNAseq normalization's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   guide
    ref
    changelog
    contributing

@@ -1,4 +1,4 @@
-"""Utils for normalization"""
+"""Utilities for normalization."""
 import numpy as np
 from sklearn.preprocessing import FunctionTransformer
 
@@ -6,17 +6,32 @@ from ..typing import Numeric2D
 
 
 class LibrarySize(FunctionTransformer):
-    """Get library size of an expression matrix.
+    """Library size.
 
-    Samples are in rows, genes in columns.
+    :param allow_nan: If true, allow X to contain NaN values.
 
-    :param validate: If true, convert X to Numpy array and make
-        various checks (2D matrix, non-empty, all values are finite)
-        NaN values are not allowed.
+    .. rubric:: Examples
+
+    >>> from rnanorm.datasets import load_rnaseq_toy
+    >>> from rnanorm import LibrarySize
+    >>> X = load_rnaseq_toy(as_frame=True).exp
+    >>> X
+           G1     G2      G3      G4       G5
+    S1  200.0  300.0   500.0  2000.0   7000.0
+    S2  400.0  600.0  1000.0  4000.0  14000.0
+    S3  200.0  300.0   500.0  2000.0  17000.0
+    S4  200.0  300.0   500.0  2000.0   2000.0
+    >>> LibrarySize().set_output(transform="pandas").fit_transform(X)
+        Library size
+    S1       10000.0
+    S2       20000.0
+    S3       20000.0
+    S4        5000.0
 
     """
 
     def __init__(self, allow_nan: bool = False) -> None:
+        """Initialize class."""
         self.allow_nan = allow_nan
         super().__init__(
             func=np.nansum,
