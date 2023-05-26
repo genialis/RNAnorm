@@ -33,3 +33,4 @@ Datasets
    :toctree: generated/
 
    datasets.load_rnaseq_toy
+   datasets.load_gtex

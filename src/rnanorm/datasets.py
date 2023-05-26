@@ -75,3 +75,43 @@ def load_rnaseq_toy(as_frame: bool = False) -> Bunch:
     ds.gtf_path = gtf_path
 
     return ds
+
+
+def load_gtex(as_frame: bool = False) -> Bunch:
+    """
+    Load a real RNAseq dataset from GTFx project.
+
+    Dataset is reduced to chr21 and first 30 samples from GTEx lung V8.
+
+    :param as_frame: Return expression as pandas.DataFrame instead of Numpy
+                     array.
+
+    .. rubric:: Examples
+
+    >>> from rnanorm.datasets import load_gtex
+    >>> dataset = load_gtex()
+    >>> dataset.exp
+    array([[  871,  8129,   101, ...,     0,     0,     0],
+          [  852,  7076,    72, ...,    12,     0,     0],
+          [  912, 11016,   174, ...,     5,     0,     0],
+          ...,
+          [ 1082,  6941,    50, ...,     5,     0,     0],
+          [ 1248,  7052,   130, ...,     1,     0,     0],
+          [ 2207, 10937,    24, ...,     0,     0,     0]])
+    >>> # TPM and FPKM normalization also require GTF file
+    >>> dataset.gtf_path
+    PosixPath('/Users/.../gencode.v26.annotation.chr21.gtf.gz')
+
+    """
+    ds = Bunch()
+
+    files_dir = Path(__file__).parent / "files"
+
+    exp = pd.read_csv(files_dir / "gtex_lung.first30.chr21.csv.gz", index_col=0)
+    if not as_frame:
+        exp = exp.to_numpy()
+    ds.exp = exp
+
+    ds.gtf_path = files_dir / "gencode.v26.annotation.chr21.gtf.gz"
+
+    return ds
