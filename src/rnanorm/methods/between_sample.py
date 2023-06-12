@@ -1,5 +1,6 @@
 """Between sample normalizations."""
 import numpy as np
+from scipy.stats import rankdata, scoreatpercentile
 from sklearn.base import BaseEstimator, OneToOneFeatureMixin, TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 
@@ -51,6 +52,9 @@ class UQ(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
         - "Adjusted library size" = library size * normalization factors
         - Compute CPM normalization with "Adjusted library size"
 
+    This implementation is based on edgeR's and is validated to be identical to
+    it to at least 10 decimal places.
+
     .. rubric:: Examples
 
     >>> from rnanorm.datasets import load_rnaseq_toy
@@ -78,11 +82,13 @@ class UQ(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
         lib_size = LibrarySize().fit_transform(X)
 
         # Compute upper quartile count for each sample.
-        upper_quartiles = np.nanquantile(
-            X,
-            q=0.75,
+        # No numpy method can be used as drop-in replacement for R's quantile.
+        # Scipy's method needs to be used, bit only works on 1D arrays
+        upper_quartiles = np.apply_along_axis(
+            func1d=scoreatpercentile,
             axis=1,
-            method="nearest",
+            arr=X,
+            per=75,
         )
         return upper_quartiles / lib_size
 
@@ -199,6 +205,9 @@ class TMM(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
         - "Adjusted library size" = library size * normalization factors
         - Compute CPM normalization with "Adjusted library size"
 
+    This implementation is based on edgeR's and is validated to be identical to
+    it to at least 10 decimal places.
+
     :param m_trim: Keep genes that are within
         (``m_trim``, 1 - ``m_trim``) percentile of M-values.
     :param a_trim: Keep genes that are within
@@ -240,7 +249,7 @@ class TMM(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
         lib_size_ref = LibrarySize().fit_transform(self.ref_[np.newaxis, :])
 
         # Values 0 cause a lot of troubles and warnings in log / division.
-        # But computing with np.nan is OK, and is handled gracefuly.
+        # But computing with np.nan is OK, and is handled gracefully.
         # So convert values of 0 to np.nan early to avoid trouble.
         X[X == 0] = np.nan
         # When making 0 -> np.nan, make a copy of self.ref_, since modifying
@@ -254,32 +263,49 @@ class TMM(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
         r_ref = ref / lib_size_ref
 
         # Gene-wise log-fold-changes, M from the paper
-        m = np.log2(r) - np.log2(r_ref)
-        # print(m)
+        # Order matters: do not change from log(x/y) to log(x)-log(y)
+        m = np.log2(r / r_ref)
         # Absolute expressions levels, A from the paper
-        a = (np.log2(r) + np.log2(r_ref)) / 2
-        # print(a)
+        # Order matters: do not change from log(x*y) to log(x)+log(y)
+        a = (np.log2(r * r_ref)) / 2
         # Approximate asymptotic variances, w from the paper
         w = (1 - r) / X + (1 - r_ref) / ref
-        # print(w)
 
-        # Compute lower / upper cutoffs for M / A
-        m_low, m_high = np.nanquantile(m, [self.m_trim, 1 - self.m_trim], axis=1)
-        a_low, a_high = np.nanquantile(a, [self.a_trim, 1 - self.a_trim], axis=1)
-        # Determine which genes to keep
-        keep = np.logical_and(
-            np.logical_and(m >= m_low[:, np.newaxis], m <= m_high[:, np.newaxis]),
-            np.logical_and(a >= a_low[:, np.newaxis], a <= a_high[:, np.newaxis]),
-        )
+        # At this point, depart from vectorization, since removal of NaN can
+        # yield different lengths of rows in m / a / w in different samples It
+        # would make 2D arrays with rows of diff lengths, so not numpy
+        # compatible.
+        f = list()
+        for i in range(X.shape[0]):
+            mm = m[i]
+            aa = a[i]
+            ww = w[i]
+            # Remove NaN values
+            finite = np.isfinite(mm) & np.isfinite(aa)
+            mm = mm[finite]
+            aa = aa[finite]
+            ww = ww[finite]
 
-        # Compute weighted mean of M values for genes in keep, weights are w:
-        # XXX: This seems to be a mistake in the paper: Paper says multiply
-        # with w, but edgeR implementation divides with w. So do we.
-        f = np.nansum(keep * m / w, axis=1) / np.nansum(keep / w, axis=1)
+            n = len(mm)
+            # Compute lower / upper cutoffs for m / a values
+            m_low = np.floor(n * self.m_trim) + 1
+            m_high = n - m_low + 1
+            a_low = np.floor(n * self.a_trim) + 1
+            a_high = n - a_low + 1
 
-        # Impute nan's with 0, so that 2 ** 0 = 1
-        f = np.nan_to_num(f, nan=0.0)
-        factors = 2**f
+            # Determine which genes to keep
+            keep = np.logical_and(
+                np.logical_and(rankdata(mm) >= m_low, rankdata(mm) <= m_high),
+                np.logical_and(rankdata(aa) >= a_low, rankdata(aa) <= a_high),
+            )
+
+            # Compute weighted mean of M values for genes in keep, weights w:
+            # XXX: This seems to be a mistake in the paper: Paper says multiply
+            # with w, but edgeR implementation divides with w. So do we.
+            f.append(np.nansum(keep * mm / ww) / np.nansum(keep / ww))
+
+        f = np.asarray(f, dtype=float)  # type: ignore[assignment]
+        factors = np.power(2, f)
 
         return factors
 
