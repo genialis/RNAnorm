@@ -3,7 +3,7 @@ import functools
 import io
 import sys
 from pathlib import Path
-from typing import Any, Callable, Type, Union
+from typing import Any, Callable, Optional, Type, Union
 
 import click
 import pandas as pd
@@ -11,7 +11,7 @@ import pandas as pd
 from rnanorm import CPM, CTF, CUF, FPKM, TMM, TPM, UQ
 
 method_type = Type[Union[CPM, FPKM, TMM, TPM, UQ]]
-out_type = Union[io.TextIOWrapper, Path]
+file_type = Union[io.TextIOWrapper, Path]
 
 
 class CLWrapper:
@@ -22,14 +22,20 @@ class CLWrapper:
         self.method = method
         self.kwargs = kwargs
 
-    def handle(self, exp: pd.DataFrame, out: out_type, force: bool) -> None:
-        """Parse, tranasform and write out the results.."""
+    def handle(self, exp: file_type, out: file_type, force: bool) -> None:
+        """Parse, transform and write out the results."""
         X = self.parse_exp(exp)
+
+        # Turn ``--gene-lengths`` (CLI option, a file object) into
+        # ``gene_lengths`` (TPM / FPKM method argument, a Series)
+        if self.kwargs.get("gene_lengths", None) is not None:
+            self.kwargs["gene_lengths"] = self.parse_gene_lengths(self.kwargs["gene_lengths"])
+
         normalization = self.method(**self.kwargs).set_output(transform="pandas")
         result = normalization.fit_transform(X)
         self.write_out(out, result, force)
 
-    def parse_exp(self, exp: pd.DataFrame) -> pd.DataFrame:
+    def parse_exp(self, exp: file_type) -> pd.DataFrame:
         """Parse expression matrix into a DataFrame."""
         if exp.name != "<stdin>":
             if not Path(exp.name).exists():
@@ -39,7 +45,16 @@ class CLWrapper:
 
         return pd.read_csv(exp, index_col=0)
 
-    def write_out(self, out: out_type, result: pd.DataFrame, force: bool = False) -> None:
+    def parse_gene_lengths(self, gene_lengths_file: file_type) -> pd.DataFrame:
+        """Parse gene lengths file into a Series object."""
+        if not Path(gene_lengths_file.name).exists():
+            raise ValueError(f"File {gene_lengths_file.name} does not exist.")
+        if not Path(gene_lengths_file.name).is_file():
+            raise ValueError(f"File {gene_lengths_file.name} is not a file.")
+
+        return pd.read_csv(gene_lengths_file, index_col=0).iloc[:, 0]
+
+    def write_out(self, out: file_type, result: pd.DataFrame, force: bool = False) -> None:
         """Write the resulting DataFrame to a file or stdout."""
         if out.name != "<stdout>":
             if Path(out.name).is_dir():
@@ -79,8 +94,14 @@ def gtf_param(func: Callable[..., Any]) -> Callable[..., Any]:
     @click.option(
         "--gtf",
         type=click.File("r"),
-        required=True,
+        required=False,
         help="Compute gene lengths from this GTF file",
+    )
+    @click.option(
+        "--gene-lengths",
+        type=click.File("r"),
+        required=False,
+        help="File with gene lengths",
     )
     @functools.wraps(func)
     def wrapper(*args: Any, **kwargs: Any) -> Callable[..., Any]:
@@ -103,7 +124,7 @@ def tmm_params(func: Callable[..., Any]) -> Callable[..., Any]:
 
 @click.command()
 @common_params
-def cpm(exp: pd.DataFrame, out: out_type, force: bool) -> None:
+def cpm(exp: pd.DataFrame, out: file_type, force: bool) -> None:
     """Compute CPM."""
     CLWrapper(CPM).handle(exp, out, force)
 
@@ -111,29 +132,41 @@ def cpm(exp: pd.DataFrame, out: out_type, force: bool) -> None:
 @click.command()
 @common_params
 @gtf_param
-def fpkm(exp: pd.DataFrame, out: out_type, force: bool, gtf: io.TextIOWrapper) -> None:
+def fpkm(
+    exp: pd.DataFrame,
+    out: file_type,
+    force: bool,
+    gtf: Optional[io.TextIOWrapper] = None,
+    gene_lengths: Optional[io.TextIOWrapper] = None,
+) -> None:
     """Compute FPKM."""
-    CLWrapper(FPKM, gtf=gtf).handle(exp, out, force)
+    CLWrapper(FPKM, gtf=gtf, gene_lengths=gene_lengths).handle(exp, out, force)
 
 
 @click.command()
 @common_params
 @gtf_param
-def tpm(exp: pd.DataFrame, out: out_type, force: bool, gtf: io.TextIOWrapper) -> None:
+def tpm(
+    exp: pd.DataFrame,
+    out: file_type,
+    force: bool,
+    gtf: Optional[io.TextIOWrapper] = None,
+    gene_lengths: Optional[io.TextIOWrapper] = None,
+) -> None:
     """Compute TPM."""
-    CLWrapper(TPM, gtf=gtf).handle(exp, out, force)
+    CLWrapper(TPM, gtf=gtf, gene_lengths=gene_lengths).handle(exp, out, force)
 
 
 @click.command()
 @common_params
-def uq(exp: pd.DataFrame, out: out_type, force: bool) -> None:
+def uq(exp: pd.DataFrame, out: file_type, force: bool) -> None:
     """Compute UQ."""
     CLWrapper(UQ).handle(exp, out, force)
 
 
 @click.command()
 @common_params
-def cuf(exp: pd.DataFrame, out: out_type, force: bool) -> None:
+def cuf(exp: pd.DataFrame, out: file_type, force: bool) -> None:
     """Compute CUF."""
     CLWrapper(CUF).handle(exp, out, force)
 
@@ -141,7 +174,7 @@ def cuf(exp: pd.DataFrame, out: out_type, force: bool) -> None:
 @click.command()
 @common_params
 @tmm_params
-def tmm(exp: pd.DataFrame, out: out_type, force: bool, m_trim: float, a_trim: float) -> None:
+def tmm(exp: pd.DataFrame, out: file_type, force: bool, m_trim: float, a_trim: float) -> None:
     """Compute TMM."""
     CLWrapper(TMM, m_trim=m_trim, a_trim=a_trim).handle(exp, out, force)
 
@@ -149,7 +182,7 @@ def tmm(exp: pd.DataFrame, out: out_type, force: bool, m_trim: float, a_trim: fl
 @click.command()
 @common_params
 @tmm_params
-def ctf(exp: pd.DataFrame, out: out_type, force: bool, m_trim: float, a_trim: float) -> None:
+def ctf(exp: pd.DataFrame, out: file_type, force: bool, m_trim: float, a_trim: float) -> None:
     """Compute CTF."""
     CLWrapper(CTF, m_trim=m_trim, a_trim=a_trim).handle(exp, out, force)
 
