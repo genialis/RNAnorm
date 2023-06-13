@@ -1,9 +1,10 @@
 """Within sample normalization: CPM, FPKM and TPM."""
 import warnings
 from pathlib import Path
-from typing import Union
+from typing import Optional, Union
 
 import numpy as np
+import pandas as pd
 from sklearn.preprocessing import FunctionTransformer
 
 from ..annotation import GTF
@@ -77,8 +78,17 @@ class CPM(FunctionTransformer):
 class BaseNormalizationWithGTF(FunctionTransformer):
     """Normalize raw counts."""
 
-    def __init__(self, gtf: Union[str, Path]) -> None:
+    def __init__(
+        self,
+        gtf: Optional[Union[str, Path]] = None,
+        gene_lengths: Optional[pd.Series] = None,
+    ) -> None:
         """Initialize class."""
+        if (gtf is None and gene_lengths is None) or (
+            gtf is not None and gene_lengths is not None
+        ):
+            raise ValueError("One and only one of gtf or gene_lengths should be provided")
+        self.gene_lengths = gene_lengths
         self.gtf = gtf
         super().__init__(
             func=self._func,
@@ -88,11 +98,27 @@ class BaseNormalizationWithGTF(FunctionTransformer):
 
     def _get_gene_lengths(self, X: Numeric2D) -> Numeric1D:
         """Check and correct X and gene lengths."""
-        # gene_lengths is a pandas.Series object
-        gene_lengths = GTF(self.gtf).length
+        # gene_lengths should be a pandas.Series object with gene ID's in index
+        # and gene lengths in values.
+        if self.gtf:
+            gene_lengths = GTF(self.gtf).length
+        else:
+            # Validate gene lengths
+            if not isinstance(self.gene_lengths, pd.Series):
+                raise ValueError("gene_lengths should be a pandas.Series object")
+            if not self.gene_lengths.index.is_unique:
+                raise ValueError("gene_lengths should have unique index")
+            if not self.gene_lengths.ge(0).all():
+                raise ValueError("gene_lengths should only contain positive numbers")
+            if not (self.gene_lengths - self.gene_lengths.astype(int)).sum() == 0:
+                raise ValueError("gene_lengths should only contain integers")
+            gene_lengths = self.gene_lengths
 
         missing = set(self.feature_names_in_) - set(gene_lengths.index)
         if missing:
+            if len(missing) == len(self.feature_names_in_):
+                container = "gtf" if self.gtf is not None else "gene_lengths"
+                raise ValueError(f"None of the genes in X are in {container}.")
             warnings.warn(
                 f"X contains {len(missing)} genes that are not in GTF "
                 f"{self.gtf}. This will result in NaN values for missing "

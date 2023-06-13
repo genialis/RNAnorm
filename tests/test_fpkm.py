@@ -3,6 +3,7 @@ import pandas as pd
 import pytest
 
 from rnanorm import FPKM
+from rnanorm.annotation import GTF
 
 
 @pytest.fixture
@@ -40,3 +41,16 @@ def test_fpkm(exp, expected, gtf_file):
     exp.iloc[0, 0] = np.nan
     with pytest.raises(ValueError, match="Input X contains NaN."):
         transformer.fit_transform(exp)
+
+
+def test_fpkm_gene_lengths(exp, expected, gtf_file):
+    gene_lengths = GTF(gtf=gtf_file).length
+
+    transformer = FPKM(gene_lengths=gene_lengths)
+    transformer.set_output(transform="pandas")
+
+    with pytest.warns(UserWarning, match=r"X contains .* genes that are not ."):
+        exp_normalized = transformer.fit_transform(exp)
+
+    assert isinstance(exp_normalized, pd.DataFrame)
+    pd.testing.assert_frame_equal(exp_normalized, expected)
