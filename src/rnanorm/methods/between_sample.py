@@ -1,6 +1,6 @@
 """Between sample normalizations."""
 import numpy as np
-from scipy.stats import rankdata, scoreatpercentile
+from scipy.stats import gmean, rankdata, scoreatpercentile
 from sklearn.base import BaseEstimator, OneToOneFeatureMixin, TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 
@@ -9,7 +9,7 @@ from .utils import LibrarySize
 
 
 def remove_zero_genes(X: Numeric2D) -> Numeric2D:
-    """Remove genes with zero counts in all samples.
+    """Remove genes with zero count in all samples.
 
     Also, convert to numpy.
     """
@@ -17,60 +17,51 @@ def remove_zero_genes(X: Numeric2D) -> Numeric2D:
     return X[:, np.sum(X, axis=0) > 0]
 
 
-def geometric_mean(x: Numeric1D) -> float:
-    """Scale pd.Series array so that geometric mean of elements is 1.
-
-    We make use of the fact that mean of the log-values is geometric mean.
-
-    :param X: pd.Series
-    :return: pd.Series scaled
-    """
-    return np.exp(np.mean(np.log(x)))
-
-
 class UQ(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
     """Upper quartile (UQ) normalization.
 
-    Sometimes in RNAseq a small number of genes are very highly expressed in
-    some samples but not in others. This can artificially inflate library size
-    and therefore (after library size normalization) cause the remaining genes
-    to be considered under-sampled in those samples. Unless this effect is
-    adjusted for, those genes may falsely appear to be down-regulated in that
-    sample. Upper quartile is one of the approaches to correct for such
-    imbalance. For more explanation on the topic check `EdgeR docs
+    In an RNA-seq experiment a small fraction of genes is sometimes extremely
+    overexpressed in some samples but not in others. This can artificially
+    inflate library size and therefore (after library size normalization) cause
+    the remaining genes to be considered under-sampled in those samples. Unless
+    this effect is adjusted for, those genes may falsely appear to be
+    down-regulated in that sample. Upper quartile is one of the approaches to
+    correct for such imbalance. For more explanation on the topic check `EdgeR
+    docs
     <https://bioconductor.org/packages/release/bioc/html/edgeR.html>`_.
 
     Procedure for normalization is described in `Bullard et al. 2010
     <https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-11-94>`_,
     but in short:
 
-        - Use raw counts
+        - Use raw counts as input
         - Compute scaling factors
-            - Remove genes that have zero counts in all samples
-            - Scaling factor for each sample is the 75-th percentile
+            - Remove genes that have zero count in all samples
+            - Scaling factor is expression at the 75th percentile
             - Rescale factors so that their geometric mean is 1
-        - "Adjusted library size" = library size * normalization factors
-        - Compute CPM normalization with "Adjusted library size"
+        - "Adjusted library size" = library size * factor
+        - Return CPM normalization with "Adjusted library size"
 
-    This implementation is based on edgeR's and is validated to be identical to
-    it to at least 10 decimal places.
+    This implementation is based on edgeR and has been validated to be
+    identical to it to at least 10 decimal places.
 
     .. rubric:: Examples
 
-    >>> from rnanorm.datasets import load_rnaseq_toy
+    >>> from rnanorm.datasets import load_toy_data
     >>> from rnanorm import UQ
-    >>> X = load_rnaseq_toy().exp
+    >>> X = load_toy_data().exp
     >>> X
-    array([[  200.,   300.,   500.,  2000.,  7000.],
-           [  400.,   600.,  1000.,  4000., 14000.],
-           [  200.,   300.,   500.,  2000., 17000.],
-           [  200.,   300.,   500.,  2000.,  2000.]])
-    >>> UQ().fit_transform(X)
-    array([[  20000.,   30000.,   50000.,  200000.,  700000.],
-           [  20000.,   30000.,   50000.,  200000.,  700000.],
-           [  20000.,   30000.,   50000.,  200000., 1700000.],
-           [  20000.,   30000.,   50000.,  200000.,  200000.]])
-
+              Gene_1  Gene_2  Gene_3  Gene_4  Gene_5
+    Sample_1     200     300     500    2000    7000
+    Sample_2     400     600    1000    4000   14000
+    Sample_3     200     300     500    2000   17000
+    Sample_4     200     300     500    2000    2000
+    >>> UQ().set_output(transform="pandas").fit_transform(X)
+               Gene_1   Gene_2   Gene_3    Gene_4     Gene_5
+    Sample_1  20000.0  30000.0  50000.0  200000.0   700000.0
+    Sample_2  20000.0  30000.0  50000.0  200000.0   700000.0
+    Sample_3  20000.0  30000.0  50000.0  200000.0  1700000.0
+    Sample_4  20000.0  30000.0  50000.0  200000.0   200000.0
     """
 
     def _get_norm_factors(self, X: Numeric2D) -> Numeric1D:
@@ -99,7 +90,7 @@ class UQ(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
         """
         check_is_fitted(self)
         factors = self._get_norm_factors(X)
-        return factors / self.geometric_mean_  # type: ignore[return-value]
+        return factors / self.geometric_mean_
 
     def _reset(self) -> None:
         """Reset internal data-dependent state."""
@@ -116,7 +107,7 @@ class UQ(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
         X = self._validate_data(X, force_all_finite=True, reset=True)
 
         factors = self._get_norm_factors(X)
-        self.geometric_mean_ = geometric_mean(factors)
+        self.geometric_mean_ = gmean(factors)
 
         return self
 
@@ -144,24 +135,27 @@ class CUF(UQ):
     <https://genomebiology.biomedcentral.com/articles/10.1186/s13059-021-02568-9>`_,
     but in short:
 
-        - Compute normalization factors same as in UpperQuartile
+        - Use raw counts as input
+        - Compute normalization factors the same way as in UpperQuartile
         - Divide raw counts with these factors
 
     .. rubric:: Examples
 
-    >>> from rnanorm.datasets import load_rnaseq_toy
+    >>> from rnanorm.datasets import load_toy_data
     >>> from rnanorm import CUF
-    >>> X = load_rnaseq_toy().exp
+    >>> X = load_toy_data().exp
     >>> X
-    array([[  200.,   300.,   500.,  2000.,  7000.],
-           [  400.,   600.,  1000.,  4000., 14000.],
-           [  200.,   300.,   500.,  2000., 17000.],
-           [  200.,   300.,   500.,  2000.,  2000.]])
-    >>> CUF().fit_transform(X)
-    array([[  200.,   300.,   500.,  2000.,  7000.],
-           [  400.,   600.,  1000.,  4000., 14000.],
-           [  400.,   600.,  1000.,  4000., 34000.],
-           [  100.,   150.,   250.,  1000.,  1000.]])
+              Gene_1  Gene_2  Gene_3  Gene_4  Gene_5
+    Sample_1     200     300     500    2000    7000
+    Sample_2     400     600    1000    4000   14000
+    Sample_3     200     300     500    2000   17000
+    Sample_4     200     300     500    2000    2000
+    >>> CUF().set_output(transform="pandas").fit_transform(X)
+              Gene_1  Gene_2  Gene_3  Gene_4   Gene_5
+    Sample_1   200.0   300.0   500.0  2000.0   7000.0
+    Sample_2   400.0   600.0  1000.0  4000.0  14000.0
+    Sample_3   400.0   600.0  1000.0  4000.0  34000.0
+    Sample_4   100.0   150.0   250.0  1000.0   1000.0
 
     """
 
@@ -182,13 +176,13 @@ class CUF(UQ):
 class TMM(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
     """Trimmed mean of M-values (TMM) normalization.
 
-    Sometime in RNAseq a small number of genes are very highly expressed in
-    some samples but not in others. This can artificially inflate library size
-    and therefore (after library size normalization) cause the remaining genes
-    to be considered under-sampled in those samples. Unless this effect is
-    adjusted for, those genes may falsely appear to be down-regulated in that
-    sample. TMM is one of the approaches to correct for such imbalance. For
-    more explanation on the topic check `EdgeR docs
+    In an RNA-seq experiment a small fraction of genes is sometimes extremely
+    overexpressed in some samples but not in others . This can artificially
+    inflate library size and therefore (after library size normalization) cause
+    the remaining genes to be considered under-sampled in those samples. Unless
+    this effect is adjusted for, those genes may falsely appear to be
+    down-regulated in that sample. TMM is one of the approaches to correct for
+    such imbalance. For more explanation on the topic check `EdgeR docs
     <https://bioconductor.org/packages/release/bioc/html/edgeR.html>`_.
 
     Procedure for normalization is described in `Robinson & Oshlack, 2010
@@ -215,19 +209,21 @@ class TMM(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
 
     .. rubric:: Examples
 
-    >>> from rnanorm.datasets import load_rnaseq_toy
+    >>> from rnanorm.datasets import load_toy_data
     >>> from rnanorm import TMM
-    >>> X = load_rnaseq_toy().exp
+    >>> X = load_toy_data().exp
     >>> X
-    array([[  200.,   300.,   500.,  2000.,  7000.],
-           [  400.,   600.,  1000.,  4000., 14000.],
-           [  200.,   300.,   500.,  2000., 17000.],
-           [  200.,   300.,   500.,  2000.,  2000.]])
-    >>> TMM().fit_transform(X)
-    array([[  20000.,   30000.,   50000.,  200000.,  700000.],
-           [  20000.,   30000.,   50000.,  200000.,  700000.],
-           [  20000.,   30000.,   50000.,  200000., 1700000.],
-           [  20000.,   30000.,   50000.,  200000.,  200000.]])
+              Gene_1  Gene_2  Gene_3  Gene_4  Gene_5
+    Sample_1     200     300     500    2000    7000
+    Sample_2     400     600    1000    4000   14000
+    Sample_3     200     300     500    2000   17000
+    Sample_4     200     300     500    2000    2000
+    >>> TMM().set_output(transform="pandas").fit_transform(X)
+               Gene_1   Gene_2   Gene_3    Gene_4     Gene_5
+    Sample_1  20000.0  30000.0  50000.0  200000.0   700000.0
+    Sample_2  20000.0  30000.0  50000.0  200000.0   700000.0
+    Sample_3  20000.0  30000.0  50000.0  200000.0  1700000.0
+    Sample_4  20000.0  30000.0  50000.0  200000.0   200000.0
 
     """
 
@@ -267,7 +263,7 @@ class TMM(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
         m = np.log2(r / r_ref)
         # Absolute expressions levels, A from the paper
         # Order matters: do not change from log(x*y) to log(x)+log(y)
-        a = (np.log2(r * r_ref)) / 2
+        a = np.log2(r * r_ref) / 2
         # Approximate asymptotic variances, w from the paper
         w = (1 - r) / X + (1 - r_ref) / ref
 
@@ -319,7 +315,7 @@ class TMM(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
 
         factors = self._get_norm_factors(X)
 
-        return factors / self.geometric_mean_  # type: ignore[return-value]
+        return factors / self.geometric_mean_
 
     def _reset(self) -> None:
         """Reset internal data-dependent state."""
@@ -330,7 +326,7 @@ class TMM(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
     def _get_ref(self, X: Numeric2D) -> Numeric1D:
         """Get reference sample."""
         f75 = UQ().fit(X).get_norm_factors(X)
-        ref_index = np.argmin(abs(f75 - np.mean(f75)))
+        ref_index = np.argmin(np.fabs(f75 - np.mean(f75)))
         return X[ref_index, :]
 
     def fit(self, X: Numeric2D) -> Self:
@@ -346,7 +342,7 @@ class TMM(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
         self.ref_ = self._get_ref(X)
 
         factors = self._get_norm_factors(X)
-        self.geometric_mean_ = geometric_mean(factors)
+        self.geometric_mean_ = gmean(factors)
 
         return self
 
@@ -385,19 +381,21 @@ class CTF(TMM):
 
     .. rubric:: Examples
 
-    >>> from rnanorm.datasets import load_rnaseq_toy
+    >>> from rnanorm.datasets import load_toy_data
     >>> from rnanorm import CTF
-    >>> X = load_rnaseq_toy().exp
+    >>> X = load_toy_data().exp
     >>> X
-    array([[  200.,   300.,   500.,  2000.,  7000.],
-           [  400.,   600.,  1000.,  4000., 14000.],
-           [  200.,   300.,   500.,  2000., 17000.],
-           [  200.,   300.,   500.,  2000.,  2000.]])
-    >>> CTF().fit_transform(X)
-    array([[  200.,   300.,   500.,  2000.,  7000.],
-           [  400.,   600.,  1000.,  4000., 14000.],
-           [  400.,   600.,  1000.,  4000., 34000.],
-           [  100.,   150.,   250.,  1000.,  1000.]])
+              Gene_1  Gene_2  Gene_3  Gene_4  Gene_5
+    Sample_1     200     300     500    2000    7000
+    Sample_2     400     600    1000    4000   14000
+    Sample_3     200     300     500    2000   17000
+    Sample_4     200     300     500    2000    2000
+    >>> CTF().set_output(transform="pandas").fit_transform(X)
+              Gene_1  Gene_2  Gene_3  Gene_4   Gene_5
+    Sample_1   200.0   300.0   500.0  2000.0   7000.0
+    Sample_2   400.0   600.0  1000.0  4000.0  14000.0
+    Sample_3   400.0   600.0  1000.0  4000.0  34000.0
+    Sample_4   100.0   150.0   250.0  1000.0   1000.0
 
     """
 

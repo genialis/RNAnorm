@@ -11,7 +11,7 @@ meta = metadata("rnanorm")
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = "RNAseq normalization"
+project = "RNA-seq normalization"
 author = meta["Author"]
 release = meta["Version"]
 copyright = "2023, " + author

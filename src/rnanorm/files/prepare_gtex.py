@@ -2,13 +2,13 @@
 """
 Prepare data for GTEx dataset.
 
-Data needs to be sub-sampled, otherwise it:
+Data needs to be sampled, otherwise it:
 - Inflates GitHub repo size
 - Inflates the size of binary and source distributions
 - Increase the load times of the load_gtex function
 - Increase times of tests that rely on this dataset
 
-Reductions:
+Sampling:
 - Dataset is reduced to only genes from chr21 and first 30 samples
 - GTF file is reduced to just chr21 entries. Additionally, redundant attributes
   are removed to save space
@@ -19,22 +19,12 @@ from pathlib import Path
 
 import pandas as pd
 
-# Downloaded from here
-# https://www.gencodegenes.org/human/release_26.html
-# https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_26/gencode.v26.annotation.gtf.gz
-GTF_INPUT_PATH = "/Users/jure/Downloads/gencode.v26.annotation.gtf.gz"
-
-# Downloaded from here
-# https://gtexportal.org/home/datasets
-# https://storage.googleapis.com/gtex_analysis_v8/rna_seq_data/gene_reads/gene_reads_2017-06-05_v8_lung.gct.gz
-EXP_INPUT_PATH = "/Users/jure/Downloads/gene_reads_2017-06-05_v8_lung.gct.gz"
-
-GTF_PATH = Path(__file__).parent / "gencode.v26.annotation.chr21.gtf.gz"
-EXP_PATH = Path(__file__).parent / "gtex_lung.first30.chr21.csv.gz"
+OUTPUT_GTF_PATH = Path(__file__).parent / "gencode.v26.annotation.chr21.gtf.gz"
+OUTPUT_EXP_PATH = Path(__file__).parent / "gtex_lung.first30.chr21.csv.gz"
 
 
-def prepare_gtf():
-    gtf = pd.read_csv(GTF_INPUT_PATH, sep="\t", comment="#", header=None)
+def prepare_gtf(input_gtf_path):
+    gtf = pd.read_csv(input_gtf_path, sep="\t", comment="#", header=None)
 
     # Take only chr21
     gtf = gtf[gtf[0] == "chr21"]
@@ -53,7 +43,7 @@ def prepare_gtf():
     gtf[8] = gtf[8].apply(keep_gene_id_name)
 
     gtf.to_csv(
-        GTF_PATH,
+        OUTPUT_GTF_PATH,
         sep="\t",
         header=False,
         index=False,
@@ -64,8 +54,8 @@ def prepare_gtf():
     return gene_ids
 
 
-def prepare_exp(gene_ids):
-    exp = pd.read_csv(EXP_INPUT_PATH, sep="\t", skiprows=2, index_col=1)
+def prepare_exp(input_exp_path, gene_ids):
+    exp = pd.read_csv(input_exp_path, sep="\t", skiprows=2, index_col=1)
     exp.drop(columns=["Description", "id"], inplace=True)
     exp.index.name = "ENSEMBL_ID"
     # Sort to make it reproducible and cast to list
@@ -74,12 +64,21 @@ def prepare_exp(gene_ids):
     exp = exp.iloc[:, :30]
 
     # Save the transposed version
-    exp.T.to_csv(EXP_PATH)
+    exp.T.to_csv(OUTPUT_EXP_PATH)
 
 
 if __name__ == "__main__":
-    # First prepare GTF, since we need gene ID's from chr21 to extract data
+    # First prepare GTF, since we need gene IDs from chr21 to extract data
     # from expression matrix
-    gene_ids = prepare_gtf()
 
-    prepare_exp(gene_ids)
+    # Downloaded from here
+    # https://www.gencodegenes.org/human/release_26.html
+    # https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_26/gencode.v26.annotation.gtf.gz
+    input_gtf_path = "/Users/me/Downloads/gencode.v26.annotation.gtf.gz"
+    gene_ids = prepare_gtf(input_gtf_path)
+
+    # Downloaded from here
+    # https://gtexportal.org/home/datasets
+    # https://storage.googleapis.com/gtex_analysis_v8/rna_seq_data/gene_reads/gene_reads_2017-06-05_v8_lung.gct.gz
+    input_exp_path = "/Users/me/Downloads/gene_reads_2017-06-05_v8_lung.gct.gz"
+    prepare_exp(input_exp_path, gene_ids)

@@ -61,7 +61,7 @@ Preparing release
 
 
 Describe the new features in ``changelog.rst``. Replace the Unreleased heading
-with the new version, followed by the release date (e.g.
+with the new version, followed by the release date (e.g.,
 ``13.2.0 - 2018-10-23``).
 
 Add the new dependencies to ``pyproject.toml`` and update the package version.

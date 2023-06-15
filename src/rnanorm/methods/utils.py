@@ -12,21 +12,21 @@ class LibrarySize(FunctionTransformer):
 
     .. rubric:: Examples
 
-    >>> from rnanorm.datasets import load_rnaseq_toy
+    >>> from rnanorm.datasets import load_toy_data
     >>> from rnanorm import LibrarySize
-    >>> X = load_rnaseq_toy(as_frame=True).exp
+    >>> X = load_toy_data().exp
     >>> X
-           G1     G2      G3      G4       G5
-    S1  200.0  300.0   500.0  2000.0   7000.0
-    S2  400.0  600.0  1000.0  4000.0  14000.0
-    S3  200.0  300.0   500.0  2000.0  17000.0
-    S4  200.0  300.0   500.0  2000.0   2000.0
+              Gene_1  Gene_2  Gene_3  Gene_4  Gene_5
+    Sample_1     200     300     500    2000    7000
+    Sample_2     400     600    1000    4000   14000
+    Sample_3     200     300     500    2000   17000
+    Sample_4     200     300     500    2000    2000
     >>> LibrarySize().set_output(transform="pandas").fit_transform(X)
-        Library size
-    S1       10000.0
-    S2       20000.0
-    S3       20000.0
-    S4        5000.0
+              Library size
+    Sample_1       10000.0
+    Sample_2       20000.0
+    Sample_3       20000.0
+    Sample_4        5000.0
 
     """
 

@@ -45,7 +45,7 @@ class CLWrapper:
 
         return pd.read_csv(exp, index_col=0)
 
-    def parse_gene_lengths(self, gene_lengths_file: file_type) -> pd.DataFrame:
+    def parse_gene_lengths(self, gene_lengths_file: file_type) -> pd.Series:
         """Parse gene lengths file into a Series object."""
         if not Path(gene_lengths_file.name).exists():
             raise ValueError(f"File {gene_lengths_file.name} does not exist.")
@@ -60,9 +60,7 @@ class CLWrapper:
             if Path(out.name).is_dir():
                 raise ValueError(f"File {out.name} is a directory.")
             elif Path(out.name).exists() and not force:
-                raise ValueError(
-                    f"File {out.name} already exists. Use --force parameter to overwrite"
-                )
+                raise ValueError(f"File {out.name} already exists. Use --force flag to overwrite.")
             elif not Path(out.name).parent.exists():
                 Path(out.name).parent.mkdir(parents=True)
 
@@ -122,14 +120,14 @@ def tmm_params(func: Callable[..., Any]) -> Callable[..., Any]:
     return wrapper
 
 
-@click.command()
+@click.command(short_help="Counts per million")
 @common_params
 def cpm(exp: pd.DataFrame, out: file_type, force: bool) -> None:
     """Compute CPM."""
     CLWrapper(CPM).handle(exp, out, force)
 
 
-@click.command()
+@click.command(short_help="Fragments per kilo-base million")
 @common_params
 @gtf_param
 def fpkm(
@@ -143,7 +141,7 @@ def fpkm(
     CLWrapper(FPKM, gtf=gtf, gene_lengths=gene_lengths).handle(exp, out, force)
 
 
-@click.command()
+@click.command(short_help="Transcripts per million")
 @common_params
 @gtf_param
 def tpm(
@@ -157,21 +155,21 @@ def tpm(
     CLWrapper(TPM, gtf=gtf, gene_lengths=gene_lengths).handle(exp, out, force)
 
 
-@click.command()
+@click.command(short_help="Upper quartile")
 @common_params
 def uq(exp: pd.DataFrame, out: file_type, force: bool) -> None:
     """Compute UQ."""
     CLWrapper(UQ).handle(exp, out, force)
 
 
-@click.command()
+@click.command(short_help="Counts adjusted with UQ factors")
 @common_params
 def cuf(exp: pd.DataFrame, out: file_type, force: bool) -> None:
     """Compute CUF."""
     CLWrapper(CUF).handle(exp, out, force)
 
 
-@click.command()
+@click.command(short_help="Trimmed mean of M-values")
 @common_params
 @tmm_params
 def tmm(exp: pd.DataFrame, out: file_type, force: bool, m_trim: float, a_trim: float) -> None:
@@ -179,7 +177,7 @@ def tmm(exp: pd.DataFrame, out: file_type, force: bool, m_trim: float, a_trim: f
     CLWrapper(TMM, m_trim=m_trim, a_trim=a_trim).handle(exp, out, force)
 
 
-@click.command()
+@click.command(short_help="Counts adjusted with TMM factors")
 @common_params
 @tmm_params
 def ctf(exp: pd.DataFrame, out: file_type, force: bool, m_trim: float, a_trim: float) -> None:
@@ -189,7 +187,7 @@ def ctf(exp: pd.DataFrame, out: file_type, force: bool, m_trim: float, a_trim: f
 
 @click.group()
 def main() -> None:
-    """Define main entry point for CLI."""
+    """Common RNA-seq normalization methods."""
     pass
 
 

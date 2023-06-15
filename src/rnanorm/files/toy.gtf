@@ -1,0 +1,15 @@
+#!genome-build GRCh38.p12
+#!genome-version GRCh38
+1	.	gene	1001	1200	.	+	.	gene_id "Gene_1";
+1	.	exon	1001	1200	.	+	.	gene_id "Gene_1";
+1	.	gene	2001	3000	.	+	.	gene_id "Gene_2";
+1	.	exon	2001	2200	.	+	.	gene_id "Gene_2";
+1	.	exon	2901	3000	.	+	.	gene_id "Gene_2";
+1	.	gene	2001	3000	.	-	.	gene_id "Gene_3";
+1	.	exon	2001	2400	.	-	.	gene_id "Gene_3";
+1	.	exon	2901	3000	.	-	.	gene_id "Gene_3";
+1	.	gene	2001	3000	.	+	.	gene_id "Gene_4";
+1	.	exon	2001	2700	.	+	.	gene_id "Gene_4";
+1	.	exon	2501	3000	.	+	.	gene_id "Gene_4";
+2	.	gene	1001	2000	.	+	.	gene_id "Gene_5";
+2	.	exon	1001	2000	.	+	.	gene_id "Gene_5";

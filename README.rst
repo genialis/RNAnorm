@@ -1,6 +1,6 @@
-====================
-RNAseq normalization
-====================
+=====================
+RNA-seq normalization
+=====================
 
 |build| |black| |docs| |pypi_version| |pypi_pyversions| |pypi_downloads|
 
@@ -29,7 +29,7 @@ RNAseq normalization
     :alt: Number of downloads from PyPI
 
 
-Python implementation of common RNAseq normalization methods:
+Python implementation of common RNA-seq normalization methods:
 
 - CPM (Counts per million)
 - FPKM_ (Fragments per kilobase million)
@@ -39,6 +39,7 @@ Python implementation of common RNAseq normalization methods:
 - TMM_ (Trimmed mean of M-values)
 - CTF_ (Counts adjusted with TMM factors)
 
+For in-depth description of methods see documentation_.
 
 .. _FPKM: https://www.nature.com/articles/nmeth.1226
 .. _TPM: https://link.springer.com/article/10.1007/s12064-012-0162-3
@@ -46,15 +47,17 @@ Python implementation of common RNAseq normalization methods:
 .. _CUF: https://genomebiology.biomedcentral.com/articles/10.1186/s13059-021-02568-9/
 .. _TMM: https://genomebiology.biomedcentral.com/articles/10.1186/gb-2010-11-3-r25
 .. _CTF: https://genomebiology.biomedcentral.com/articles/10.1186/s13059-021-02568-9/
+.. _documentation: https://rnanorm.readthedocs.io/
+
 
 Features
 ========
 
 - Pure Python implementation (no need for R, etc.)
-- Scikit-learn_ compatible
+- Compatible with Scikit-learn_
 - Command line interface
-- Verbose documentation_ (at least we hope so...)
-- Tested methods
+- Verbose documentation_
+- Validated method implementation
 
 
 .. _Scikit-learn: https://scikit-learn.org/
@@ -72,37 +75,86 @@ We recommend installing RNAnorm with pip::
 Quick start
 ===========
 
-Implemented methods can be used from Python or from the command line.
+The implemented methods can be executed from Python or from the command line.
 
 Normalize from Python
 ---------------------
 
-Most commonly normalization methods are run from Python. E.g.::
+The most common use case is to run normalization from Python::
 
-   >>> from rnanorm.datasets import load_rnaseq_toy
+   >>> from rnanorm.datasets import load_toy_data
    >>> from rnanorm import FPKM
-   >>> dataset = load_rnaseq_toy()
+   >>> dataset = load_toy_data()
+   >>> # Expressions need to have genes in columns and samples in rows
    >>> dataset.exp
-          G1     G2      G3      G4       G5
-   S1  200.0  300.0   500.0  2000.0   7000.0
-   S2  400.0  600.0  1000.0  4000.0  14000.0
-   S3  200.0  300.0   500.0  2000.0  17000.0
-   S4  200.0  300.0   500.0  2000.0   2000.0
+             Gene_1  Gene_2  Gene_3  Gene_4  Gene_5
+   Sample_1     200     300     500    2000    7000
+   Sample_2     400     600    1000    4000   14000
+   Sample_3     200     300     500    2000   17000
+   Sample_4     200     300     500    2000    2000
    >>> fpkm = FPKM(dataset.gtf_path).set_output(transform="pandas")
    >>> fpkm.fit_transform(dataset.exp)
-             G1        G2        G3        G4        G5
-   S1  100000.0  100000.0  100000.0  200000.0  700000.0
-   S2  100000.0  100000.0  100000.0  200000.0  700000.0
-   S3   50000.0   50000.0   50000.0  100000.0  850000.0
-   S4  200000.0  200000.0  200000.0  400000.0  400000.0
+                Gene_1    Gene_2    Gene_3    Gene_4    Gene_5
+   Sample_1   100000.0  100000.0  100000.0  200000.0  700000.0
+   Sample_2   100000.0  100000.0  100000.0  200000.0  700000.0
+   Sample_3    50000.0   50000.0   50000.0  100000.0  850000.0
+   Sample_4   200000.0  200000.0  200000.0  400000.0  400000.0
 
 
 Normalize from command line
 ---------------------------
 
-Often it is handy to do normalization from the command line::
+Normalization from the command line is also supported. To list available
+methods and general help::
 
-   rnanorm fpkm exp.csv --gtf annotation.gtf --out exp_fpkm.csv
+    rnanorm --help
+
+Get info about a particular method, e.g., CPM::
+
+    rnanorm cpm --help
+
+To normalize with CPM::
+
+   rnanorm cpm exp.csv --out exp_cpm.csv
+
+File ``exp.csv`` needs to be comma separated file with genes in columns and
+samples in rows. Values should be raw counts. The output is saved to
+``exp_cpm.csv``. Example of input file::
+
+    cat exp.csv
+    ,Gene_1,Gene_2,Gene_3,Gene_4,Gene_5
+    Sample_1,200,300,500,2000,7000
+    Sample_2,400,600,1000,4000,14000
+    Sample_3,200,300,500,2000,17000
+    Sample_4,200,300,500,2000,2000
+
+One can also provide input through standard input::
+
+   cat exp.csv | rnanorm cpm --out exp_cpm.csv
+
+If file specified with ``--out`` already exists the command will fail. If you
+are sure that you wish to overwrite, use ``--force`` flag::
+
+   cat exp.csv | rnanorm cpm --force --out exp_cpm.csv
+
+If no file is specified with ``--out`` parameter, output is printed to standard
+output::
+
+   cat exp.csv | rnanorm cpm > exp_cpm.csv
+
+Methods TPM and FPKM require gene lengths. These can be provided either with GTF_
+file or with "gene lengths" file. The later is a two columns file. The first
+column should include the genes in the header of ``exp.csv`` and the second
+column should contain gene lengths computed by union exon model::
+
+    # Use GTF file
+    rnanorm tpm exp.csv --gtf annotations.gtf > exp_out.csv
+    # Use gene lengths file
+    rnanorm tpm exp.csv --gene-lengths lenghts.csv > exp_out.csv
+
+
+
+.. _GTF: https://www.ensembl.org/info/website/upload/gff.html
 
 
 Contribute

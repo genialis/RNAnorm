@@ -13,7 +13,6 @@ Normalization methods
    :nosignatures:
    :toctree: generated/
 
-   LibrarySize
    CPM
    FPKM
    TPM
@@ -32,5 +31,5 @@ Datasets
    :nosignatures:
    :toctree: generated/
 
-   datasets.load_rnaseq_toy
+   datasets.load_toy_data
    datasets.load_gtex

@@ -7,7 +7,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "rnanorm"
-description = "Common RNAseq normalization methods"
+description = "Common RNA-seq normalization methods"
 authors = [
     {name = "Genialis, Inc."},
     {email = "dev-team@genialis.com"},
@@ -15,7 +15,7 @@ authors = [
 dynamic = ["version"]
 readme = "README.rst"
 license = {text = "Proprietary"}
-requires-python = ">=3.8, <3.11"
+requires-python = ">=3.8, <3.12"
 keywords = [
     "bio",
     "bioinformatics",
@@ -24,18 +24,22 @@ keywords = [
     "artificial intelligence",
     "python",
     "genialis",
+    "rnaseq",
+    "normalization",
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Environment :: Console",
     "Intended Audience :: Developers",
     "Topic :: Software Development :: Libraries :: Python Modules",
+    "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
 ]
 dependencies = [
     "click",
@@ -74,7 +78,7 @@ rnanorm = "rnanorm.cli:main"
 [tool.setuptools_scm]
 
 [tool.black]
-target-version = ["py38", "py39", "py310"]
+target-version = ["py38", "py39", "py310", "py311"]
 line-length = 99
 
 [tool.isort]

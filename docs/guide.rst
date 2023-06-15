@@ -1,5 +1,0 @@
-==========
-User guide
-==========
-
-Comming soon...

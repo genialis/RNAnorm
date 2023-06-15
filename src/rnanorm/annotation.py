@@ -70,7 +70,7 @@ class GTF:
         Group exon start & end coordinates by gene ID & chromosome &
         strand. Then perfrom merge and length calculation for each
         group separately. The latter is needed since ``gene_id_attr``
-        is not unique in some annotations (e.g. RefSeq).
+        is not unique in some annotations (e.g., RefSeq).
         """
         gtf_df = gtf_df[gtf_df["feature_type"] == "exon"]
 

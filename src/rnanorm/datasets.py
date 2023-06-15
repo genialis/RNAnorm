@@ -1,117 +1,66 @@
 """Datasets."""
-import tempfile
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 from sklearn.utils import Bunch
 
+FILES_DIR = Path(__file__).parent / "files"
 
-def load_rnaseq_toy(as_frame: bool = False) -> Bunch:
+
+def load_toy_data() -> Bunch:
     """
-    Load an artificial toy dataset representative of RNAseq data.
+    Load a minimal, made-up raw count RNA-seq dataset.
 
-    :param as_frame: Return expression as pandas.DataFrame instead of Numpy
-                     array.
+    This dataset is not representative of any real RNA-seq dataset. However,
+    it is small and has just enough complexity to showcase the effects of
+    methods. It is also simple enough to make calculation by hand possible.
 
     .. rubric:: Examples
 
-    >>> from rnanorm.datasets import load_rnaseq_toy
-    >>> dataset = load_rnaseq_toy()
+    >>> from rnanorm.datasets import load_toy_data
+    >>> dataset = load_toy_data()
     >>> dataset.exp
-    array([[  200.,   300.,   500.,  2000.,  7000.],
-           [  400.,   600.,  1000.,  4000., 14000.],
-           [  200.,   300.,   500.,  2000., 17000.],
-           [  200.,   300.,   500.,  2000.,  2000.]])
-    >>> # This can be used for TPM and FPKM normalization
-    >>> # since they require GTF file
+              Gene_1  Gene_2  Gene_3  Gene_4  Gene_5
+    Sample_1     200     300     500    2000    7000
+    Sample_2     400     600    1000    4000   14000
+    Sample_3     200     300     500    2000   17000
+    Sample_4     200     300     500    2000    2000
+    >>> # TPM and FPKM normalization also require GTF file
     >>> dataset.gtf_path
-    PosixPath('/var/folders/tmp8odklw36/example.gtf')
+    PosixPath('/Users/me/.../toy.gtf')
 
     """
-
     ds = Bunch()
-
-    # Define expression matrix
-    exp = pd.DataFrame(
-        [
-            [200, 300, 500, 2000, 7000],  # The ref sample
-            [400, 600, 1000, 4000, 14000],  # Doubled all counts of ref
-            [200, 300, 500, 2000, 17000],  # Doubled library size of ref
-            [200, 300, 500, 2000, 2000],  # Halved library size of ref
-        ],
-        index=[f"S{i}" for i in range(1, 5)],
-        columns=[f"G{i}" for i in range(1, 6)],
-        dtype=np.float64,
-    )
-    if not as_frame:
-        exp = exp.to_numpy()
-    ds.exp = exp
-
-    # GTF file
-    gtf_data = [
-        ["#!genome-build GRCh38.p12"],
-        ["#!genome-version GRCh38"],
-        ["1", ".", "gene", "1001", "1200", ".", "+", ".", 'gene_id "G1";'],
-        ["1", ".", "exon", "1001", "1200", ".", "+", ".", 'gene_id "G1";'],
-        ["1", ".", "gene", "2001", "3000", ".", "+", ".", 'gene_id "G2";'],
-        ["1", ".", "exon", "2001", "2200", ".", "+", ".", 'gene_id "G2";'],
-        ["1", ".", "exon", "2901", "3000", ".", "+", ".", 'gene_id "G2";'],
-        ["1", ".", "gene", "2001", "3000", ".", "-", ".", 'gene_id "G3";'],
-        ["1", ".", "exon", "2001", "2400", ".", "-", ".", 'gene_id "G3";'],
-        ["1", ".", "exon", "2901", "3000", ".", "-", ".", 'gene_id "G3";'],
-        ["1", ".", "gene", "2001", "3000", ".", "+", ".", 'gene_id "G4";'],
-        ["1", ".", "exon", "2001", "2700", ".", "+", ".", 'gene_id "G4";'],
-        ["1", ".", "exon", "2501", "3000", ".", "+", ".", 'gene_id "G4";'],
-        ["2", ".", "gene", "1001", "2000", ".", "+", ".", 'gene_id "G5";'],
-        ["2", ".", "exon", "1001", "2000", ".", "+", ".", 'gene_id "G5";'],
-    ]
-    tmp_dir = tempfile.mkdtemp(suffix=None, prefix=None, dir=None)
-    gtf_path = Path(tmp_dir) / "example.gtf"
-    with open(gtf_path, "wt") as handle:
-        for row in gtf_data:
-            handle.write("\t".join(row) + "\n")
-
-    ds.gtf_path = gtf_path
+    ds.exp = pd.read_csv(FILES_DIR / "toy_exp.csv", index_col=0)
+    ds.gtf_path = FILES_DIR / "toy.gtf"
 
     return ds
 
 
 def load_gtex(as_frame: bool = False) -> Bunch:
     """
-    Load a real RNAseq dataset from GTFx project.
+    Load a real RNA-seq dataset from GTFx project.
 
-    Dataset is reduced to chr21 and first 30 samples from GTEx lung V8.
-
-    :param as_frame: Return expression as pandas.DataFrame instead of Numpy
-                     array.
+    Dataset is sampled to contain just chr21 and first 30 samples from GTEx
+    lung V8.
 
     .. rubric:: Examples
 
     >>> from rnanorm.datasets import load_gtex
     >>> dataset = load_gtex()
     >>> dataset.exp
-    array([[  871,  8129,   101, ...,     0,     0,     0],
-          [  852,  7076,    72, ...,    12,     0,     0],
-          [  912, 11016,   174, ...,     5,     0,     0],
-          ...,
-          [ 1082,  6941,    50, ...,     5,     0,     0],
-          [ 1248,  7052,   130, ...,     1,     0,     0],
-          [ 2207, 10937,    24, ...,     0,     0,     0]])
+                              ENSG00000141956.13  ENSG00000141959.16   ...
+    GTEX-111CU-0326-SM-5GZXO                 871                8129   ...
+    GTEX-111FC-1126-SM-5GZWU                 852                7076   ...
+    GTEX-111VG-0726-SM-5GIDC                 912               11016   ...
+    ...                                      ...                 ...   ...
     >>> # TPM and FPKM normalization also require GTF file
     >>> dataset.gtf_path
     PosixPath('/Users/.../gencode.v26.annotation.chr21.gtf.gz')
 
     """
     ds = Bunch()
-
-    files_dir = Path(__file__).parent / "files"
-
-    exp = pd.read_csv(files_dir / "gtex_lung.first30.chr21.csv.gz", index_col=0)
-    if not as_frame:
-        exp = exp.to_numpy()
-    ds.exp = exp
-
-    ds.gtf_path = files_dir / "gencode.v26.annotation.chr21.gtf.gz"
+    ds.exp = pd.read_csv(FILES_DIR / "gtex_lung.first30.chr21.csv.gz", index_col=0)
+    ds.gtf_path = FILES_DIR / "gencode.v26.annotation.chr21.gtf.gz"
 
     return ds

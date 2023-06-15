@@ -12,10 +12,6 @@ from rnanorm.annotation import GTF
 @pytest.fixture
 def exp_path(tmp_path, exp):
     exp_path = tmp_path / "exp.csv"
-
-    # This si to prevent warnings for missing gene in TPM / FPKM
-    exp.drop(columns="G5", inplace=True)
-
     exp.to_csv(exp_path)
     return exp_path
 

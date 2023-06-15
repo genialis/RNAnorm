@@ -32,15 +32,15 @@ def test_ctf(exp, expected_factors, expected_ctf):
     np.testing.assert_allclose(transformed_data, expected_ctf, rtol=1e-4)
 
     # Advanced case: Fit some samples, transform different ones.
-    samples_to_fit = ["S1", "S3", "S4"]
+    samples_to_fit = ["Sample_1", "Sample_3", "Sample_4"]
     exp1 = exp.loc[samples_to_fit]
     transformer.fit(exp1)
     factors = transformer.get_norm_factors(exp1)
-    transformed_data = transformer.transform(exp.loc[["S2"]])
+    transformed_data = transformer.transform(exp.loc[["Sample_2"]])
 
     np.testing.assert_allclose(factors, [1, 0.5, 2.0], rtol=1e-4)
     np.testing.assert_allclose(
         transformed_data,
-        expected_ctf.loc[["S2"]],
+        expected_ctf.loc[["Sample_2"]],
         rtol=1e-3,
     )
