@@ -75,17 +75,17 @@ Push changes to your fork and open a pull request::
 
    git push --set-upstream <RNAnorm-fork-name> release-<new-version>
 
-Wait for tests to pass and pull request to be approved. Merge code to master::
+Wait for tests to pass and pull request to be approved. Merge code to main::
 
-   git checkout master
+   git checkout main
    git merge --ff-only release-<new-version>
-   git push <RNAnorm-upstream-name> master <new-version>
+   git push <RNAnorm-upstream-name> main <new-version>
 
 Tag the new release from the latest commit::
 
-   git checkout master
+   git checkout main
    git tag -sm "Version <new-version>" <new-version>
 
 Push the tag to the upstream repository::
 
-   git push <RNAnorm-upstream-name> master <new-version>
+   git push <RNAnorm-upstream-name> main <new-version>

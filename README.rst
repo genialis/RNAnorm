@@ -4,8 +4,8 @@ RNA-seq normalization
 
 |build| |black| |docs| |pypi_version| |pypi_pyversions| |pypi_downloads|
 
-.. |build| image:: https://github.com/genialis/RNAnorm/workflows/build/badge.svg?branch=master
-    :target: https://github.com/genialis/RNAnorm/actions?query=branch%3Amaster
+.. |build| image:: https://github.com/genialis/RNAnorm/workflows/build/badge.svg?branch=main
+    :target: https://github.com/genialis/RNAnorm/actions?query=branch%3Amain
     :alt: Build Status
 
 .. |black| image:: https://img.shields.io/badge/code%20style-black-000000.svg
