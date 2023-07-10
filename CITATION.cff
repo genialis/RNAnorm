@@ -1,0 +1,13 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "RNAseq normalization"
+version: 2.0.0
+date-released: 2023-07-12
+url: "https://github.com/genialis/RNAnorm"
+authors:
+- family-names: "Štajdohar"
+  given-names: "Miha"
+  orcid: "https://orcid.org/0009-0008-2749-8298"
+- family-names: "Zmrzlikar"
+  given-names: "Jure"
+  orcid: "https://orcid.org/0009-0009-9749-541X"

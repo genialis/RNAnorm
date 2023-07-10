@@ -1,5 +1,6 @@
 include tox.ini
 include .readthedocs.yaml
+include CITATION.cff
 recursive-include docs *.py *.rst
 recursive-include tests *.py
 recursive-include src/rnanorm/files *.csv.gz *.gtf.gz *.csv *.gtf
