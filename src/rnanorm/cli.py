@@ -71,7 +71,7 @@ class CLWrapper:
 def common_params(func: Callable[..., Any]) -> Callable[..., Any]:
     """Set common parameters for all normalization methods."""
 
-    @click.argument("exp", type=click.File("r"), default=sys.stdin)
+    @click.argument("exp", type=click.File("r"), default=sys.stdin)  # type: ignore
     @click.option(
         "--out",
         type=click.File("w"),
@@ -89,7 +89,7 @@ def common_params(func: Callable[..., Any]) -> Callable[..., Any]:
 def gtf_param(func: Callable[..., Any]) -> Callable[..., Any]:
     """Set parameters for normalization methods that require a GTF file."""
 
-    @click.option(
+    @click.option(  # type: ignore
         "--gtf",
         type=click.File("r"),
         required=False,
@@ -111,7 +111,7 @@ def gtf_param(func: Callable[..., Any]) -> Callable[..., Any]:
 def tmm_params(func: Callable[..., Any]) -> Callable[..., Any]:
     """Set parameters for TMM and CTF normalization."""
 
-    @click.option("--m_trim", default=0.3, help="Two sided cutoff for M-values")
+    @click.option("--m_trim", default=0.3, help="Two sided cutoff for M-values")  # type: ignore
     @click.option("--a_trim", default=0.05, help="Two sided cutoff for A-values")
     @functools.wraps(func)
     def wrapper(*args: Any, **kwargs: Any) -> Callable[..., Any]:
@@ -192,10 +192,10 @@ def main() -> None:
 
 
 # Add sub-commands to the main command
-main.add_command(cpm)
-main.add_command(fpkm)
-main.add_command(tpm)
-main.add_command(uq)
-main.add_command(cuf)
-main.add_command(tmm)
-main.add_command(ctf)
+main.add_command(cpm)  # type: ignore
+main.add_command(fpkm)  # type: ignore
+main.add_command(tpm)  # type: ignore
+main.add_command(uq)  # type: ignore
+main.add_command(cuf)  # type: ignore
+main.add_command(tmm)  # type: ignore
+main.add_command(ctf)  # type: ignore
