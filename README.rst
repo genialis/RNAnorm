@@ -4,7 +4,7 @@ RNA-seq data normalization in Python
 
 |build| |black| |docs| |pypi_version| |pypi_pyversions| |pypi_downloads|
 
-.. |build| image:: https://github.com/genialis/RNAnorm/workflows/build/badge.svg?branch=main
+.. |build| image:: https://github.com/genialis/RNAnorm/actions/workflows/build.yml/badge.svg?branch=main
     :target: https://github.com/genialis/RNAnorm/actions?query=branch%3Amain
     :alt: Build Status
 
