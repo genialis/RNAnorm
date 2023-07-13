@@ -1,6 +1,6 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
-title: "RNAseq normalization"
+title: "RNA-seq data normalization in Python"
 version: 2.0.0
 date-released: 2023-07-12
 url: "https://github.com/genialis/RNAnorm"

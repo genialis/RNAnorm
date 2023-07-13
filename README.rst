@@ -1,6 +1,6 @@
-=====================
-RNA-seq normalization
-=====================
+====================================
+RNA-seq data normalization in Python
+====================================
 
 |build| |black| |docs| |pypi_version| |pypi_pyversions| |pypi_downloads|
 
@@ -163,3 +163,8 @@ Contribute
 To learn about contributing to the code base, read the  Contributing_ section.
 
 .. _Contributing: docs/contributing.rst
+
+Citing
+======
+
+If you are using RNAnorm in your research, please cite as suggested by "Cite this repository" section in the side panel of this page.
