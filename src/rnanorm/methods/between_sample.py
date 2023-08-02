@@ -1,4 +1,6 @@
 """Between sample normalizations."""
+from typing import Any, Optional
+
 import numpy as np
 from scipy.stats import gmean, rankdata, scoreatpercentile
 from sklearn.base import BaseEstimator, OneToOneFeatureMixin, TransformerMixin
@@ -97,7 +99,7 @@ class UQ(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
         if hasattr(self, "geometric_mean_"):
             del self.geometric_mean_
 
-    def fit(self, X: Numeric2D) -> Self:
+    def fit(self, X: Numeric2D, y: Optional[Numeric1D] = None, **fit_params: Any) -> Self:
         """Fit.
 
         :param X: Expression raw count matrix (n_samples, n_features)
@@ -329,7 +331,7 @@ class TMM(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
         ref_index = np.argmin(np.fabs(f75 - np.mean(f75)))
         return X[ref_index, :]
 
-    def fit(self, X: Numeric2D) -> Self:
+    def fit(self, X: Numeric2D, y: Optional[Numeric1D] = None, **fit_params: Any) -> Self:
         """Fit.
 
         :param X: Expression raw count matrix (n_samples, n_features)
