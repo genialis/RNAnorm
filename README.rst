@@ -151,7 +151,14 @@ column should contain gene lengths computed by union exon model::
     rnanorm tpm exp.csv --gtf annotations.gtf > exp_out.csv
     # Use gene lengths file
     rnanorm tpm exp.csv --gene-lengths lenghts.csv > exp_out.csv
-
+    # Example of gene lengths file
+    cat lenghts.csv
+    gene_id,gene_length
+    Gene_1,200
+    Gene_2,300
+    Gene_3,500
+    Gene_4,1000
+    Gene_5,1000
 
 
 .. _GTF: https://www.ensembl.org/info/website/upload/gff.html
