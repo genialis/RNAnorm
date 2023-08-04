@@ -3,6 +3,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import pytest
+from sklearn import config_context
 
 from rnanorm import TMM
 from rnanorm.datasets import load_gtex
@@ -70,3 +71,11 @@ def test_tmm_rnanorm_edger():
         rnanorm_factors,
         decimal=14,
     )
+
+
+def test_global_set_output(exp):
+    """Ensure that global config does not break things."""
+    with config_context(transform_output="pandas"):
+        TMM().fit_transform(exp)
+
+    TMM().set_output(transform="pandas").fit_transform(exp)

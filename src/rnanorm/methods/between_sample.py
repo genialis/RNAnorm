@@ -3,6 +3,7 @@ from typing import Any, Optional
 
 import numpy as np
 from scipy.stats import gmean, rankdata, scoreatpercentile
+from sklearn import config_context
 from sklearn.base import BaseEstimator, OneToOneFeatureMixin, TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 
@@ -72,7 +73,9 @@ class UQ(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
         :param X: Expression raw count matrix (n_samples, n_features)
         """
         X = remove_zero_genes(X)
-        lib_size = LibrarySize().fit_transform(X)
+        # Make sure that global set_config(transform_output="pandas")
+        # does not affect this method - we need numpy output here.
+        lib_size = LibrarySize().set_output(transform="default").fit_transform(X)
 
         # Compute upper quartile count for each sample.
         # No numpy method can be used as drop-in replacement for R's quantile.
@@ -124,7 +127,8 @@ class UQ(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
 
         # Compute effective library sizes
         factors = self.get_norm_factors(X)
-        effective_lib_size = LibrarySize().fit_transform(X) * factors
+        lib_size = LibrarySize().set_output(transform="default").fit_transform(X)
+        effective_lib_size = lib_size * factors
 
         # Make CPM, but with effective library size
         return X / effective_lib_size[:, np.newaxis] * 1e6
@@ -243,8 +247,10 @@ class TMM(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
         """
         X = remove_zero_genes(X)
 
-        lib_size = LibrarySize().fit_transform(X)
-        lib_size_ref = LibrarySize().fit_transform(self.ref_[np.newaxis, :])
+        # ensure that output of transform will be a np.array
+        with config_context(transform_output="default"):
+            lib_size = LibrarySize().fit_transform(X)
+            lib_size_ref = LibrarySize().fit_transform(self.ref_[np.newaxis, :])
 
         # Values 0 cause a lot of troubles and warnings in log / division.
         # But computing with np.nan is OK, and is handled gracefully.
@@ -356,7 +362,8 @@ class TMM(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
         """
         # Compute effective library sizes
         factors = self.get_norm_factors(X)
-        effective_lib_size = LibrarySize().fit_transform(X) * factors
+        lib_size = LibrarySize().set_output(transform="default").fit_transform(X)
+        effective_lib_size = lib_size * factors
 
         # Method ``check_is_fitted`` is not called here, since it is
         # called in self.get_norm_factors

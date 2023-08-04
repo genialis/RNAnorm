@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import pytest
+from sklearn import config_context
 
 from rnanorm import CTF
 
@@ -44,3 +45,11 @@ def test_ctf(exp, expected_factors, expected_ctf):
         expected_ctf.loc[["Sample_2"]],
         rtol=1e-3,
     )
+
+
+def test_global_set_output(exp):
+    """Ensure that global config does not break things."""
+    with config_context(transform_output="pandas"):
+        CTF().fit_transform(exp)
+
+    CTF().set_output(transform="pandas").fit_transform(exp)

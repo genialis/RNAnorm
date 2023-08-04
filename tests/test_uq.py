@@ -3,6 +3,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import pytest
+from sklearn import config_context
 
 from rnanorm import UQ
 from rnanorm.datasets import load_gtex
@@ -71,3 +72,11 @@ def test_uq_rnanorm_edger():
         rnanorm_factors,
         decimal=14,
     )
+
+
+def test_global_set_output(exp):
+    """Ensure that global config does not break things."""
+    with config_context(transform_output="pandas"):
+        UQ().fit_transform(exp)
+
+    UQ().set_output(transform="pandas").fit_transform(exp)

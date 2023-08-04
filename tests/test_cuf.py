@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import pytest
+from sklearn import config_context
 
 from rnanorm import CUF
 
@@ -44,3 +45,11 @@ def test_cuf(exp, expected_factors, expected_cuf):
         expected_cuf.loc[["Sample_2"]],
         rtol=1e-3,
     )
+
+
+def test_global_set_output(exp):
+    """Ensure that global config does not break things."""
+    with config_context(transform_output="pandas"):
+        CUF().fit_transform(exp)
+
+    CUF().set_output(transform="pandas").fit_transform(exp)
