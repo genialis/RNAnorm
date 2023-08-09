@@ -2,9 +2,11 @@
 from typing import Any, Optional
 
 import numpy as np
+import pandas as pd
 from scipy.stats import gmean, rankdata, scoreatpercentile
 from sklearn import config_context
 from sklearn.base import BaseEstimator, OneToOneFeatureMixin, TransformerMixin
+from sklearn.utils._set_output import _get_output_config
 from sklearn.utils.validation import check_is_fitted
 
 from ..typing import Numeric1D, Numeric2D, Self
@@ -95,7 +97,12 @@ class UQ(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
         """
         check_is_fitted(self)
         factors = self._get_norm_factors(X)
-        return factors / self.geometric_mean_
+        factors = factors / self.geometric_mean_
+
+        config = _get_output_config("transform", self)
+        if config.get("dense", None) == "pandas" and isinstance(X, pd.DataFrame):
+            return pd.Series(factors, index=X.index)
+        return factors
 
     def _reset(self) -> None:
         """Reset internal data-dependent state."""
@@ -319,11 +326,15 @@ class TMM(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
         :param X: Expression raw count matrix (n_samples, n_features)s
         """
         check_is_fitted(self)
-        X = self._validate_data(X, force_all_finite=True, reset=False, dtype=float)
+        X2 = self._validate_data(X, force_all_finite=True, reset=False, dtype=float)
 
-        factors = self._get_norm_factors(X)
+        factors = self._get_norm_factors(X2)
+        factors = factors / self.geometric_mean_
 
-        return factors / self.geometric_mean_
+        config = _get_output_config("transform", self)
+        if config.get("dense", None) == "pandas" and isinstance(X, pd.DataFrame):
+            return pd.Series(factors, index=X.index)
+        return factors
 
     def _reset(self) -> None:
         """Reset internal data-dependent state."""
@@ -362,6 +373,9 @@ class TMM(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
         """
         # Compute effective library sizes
         factors = self.get_norm_factors(X)
+        if isinstance(factors, pd.Series):
+            factors = factors.to_numpy()
+
         lib_size = LibrarySize().set_output(transform="default").fit_transform(X)
         effective_lib_size = lib_size * factors
 
@@ -416,6 +430,8 @@ class CTF(TMM):
         """
         # Just divide raw counts with normalization factors
         factors = self.get_norm_factors(X)
+        if isinstance(factors, pd.Series):
+            factors = factors.to_numpy()
 
         # Method ``check_is_fitted`` is not called here, since it is
         # called in self.get_norm_factors
