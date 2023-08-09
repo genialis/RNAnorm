@@ -37,7 +37,7 @@ def load_toy_data() -> Bunch:
     return ds
 
 
-def load_gtex(as_frame: bool = False) -> Bunch:
+def load_gtex() -> Bunch:
     """
     Load a real RNA-seq dataset from GTFx project.
 

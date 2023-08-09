@@ -62,7 +62,7 @@ def test_uq_rnanorm_edger():
     )
 
     # Compute scaling factors here
-    ds = load_gtex(as_frame=True)
+    ds = load_gtex()
     rnanorm_factors = UQ().fit(ds.exp).get_norm_factors(ds.exp)
 
     # Compare loaded and computed scaling factors
