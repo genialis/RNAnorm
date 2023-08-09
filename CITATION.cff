@@ -1,13 +1,19 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
-title: "RNA-seq data normalization in Python"
+title: "RNAnorm: RNA-seq data normalization in Python"
 version: 2.0.0
 date-released: 2023-07-12
 url: "https://github.com/genialis/RNAnorm"
 authors:
-- family-names: "Štajdohar"
-  given-names: "Miha"
-  orcid: "https://orcid.org/0009-0008-2749-8298"
 - family-names: "Zmrzlikar"
   given-names: "Jure"
   orcid: "https://orcid.org/0009-0009-9749-541X"
+- family-names: "Žganec"
+  given-names: "Matjaž"
+  orcid: "https://orcid.org/0000-0002-4159-9596"
+- family-names: "Ausec"
+  given-names: "Luka"
+  orcid: "https://orcid.org/0000-0003-3155-0999"
+- family-names: "Štajdohar"
+  given-names: "Miha"
+  orcid: "https://orcid.org/0009-0008-2749-8298"
