@@ -14,7 +14,7 @@ authors = [
 ]
 dynamic = ["version"]
 readme = "README.rst"
-license = {text = "Proprietary"}
+license = {file = "LICENSE"}
 requires-python = ">=3.8, <3.12"
 keywords = [
     "bio",
