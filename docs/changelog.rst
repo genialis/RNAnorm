@@ -6,6 +6,22 @@ All notable changes to this project are documented in this file.
 
 
 ==================
+2.0.1 - 2023-09-27
+==================
+
+Added
+-----
+- Provide an example of gene lengths file in the ``README.rst``
+
+Fixed
+-----
+- Fix ``fit`` methods to match sklearn signature
+- Fix ``LibrarySize`` to always return ``np.array`` in private functions
+- Fix ``get_norm_factors`` to follow the ``set_output`` config
+- Remove leftovers of ``as_frame`` parameter
+
+
+==================
 2.0.0 - 2023-06-21
 ==================
 
