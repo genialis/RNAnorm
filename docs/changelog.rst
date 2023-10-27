@@ -5,6 +5,15 @@ Change Log
 All notable changes to this project are documented in this file.
 
 
+==========
+Unreleased
+==========
+
+Added
+-----
+- Add support for Python 3.12
+
+
 ==================
 2.0.1 - 2023-09-27
 ==================
