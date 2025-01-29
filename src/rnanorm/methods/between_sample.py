@@ -1,4 +1,5 @@
 """Between sample normalizations."""
+
 from typing import Any, Optional
 
 import numpy as np

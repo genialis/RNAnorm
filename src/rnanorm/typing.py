@@ -1,4 +1,5 @@
 """Commonly used type hints."""
+
 import typing
 
 import numpy as np

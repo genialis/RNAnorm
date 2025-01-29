@@ -1,4 +1,5 @@
 """Within sample normalization: CPM, FPKM and TPM."""
+
 import warnings
 from pathlib import Path
 from typing import Optional, Union

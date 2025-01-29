@@ -1,4 +1,5 @@
 """Utilities for normalization."""
+
 import numpy as np
 from sklearn.preprocessing import FunctionTransformer
 from sklearn.utils.validation import validate_data

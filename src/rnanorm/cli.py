@@ -1,4 +1,5 @@
 """Command line interface."""
+
 import functools
 import io
 import sys
