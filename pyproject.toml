@@ -15,7 +15,7 @@ authors = [
 dynamic = ["version"]
 readme = "README.rst"
 license = {file = "LICENSE"}
-requires-python = ">=3.8, <3.13"
+requires-python = ">=3.9, <3.14"
 keywords = [
     "bio",
     "bioinformatics",
@@ -36,11 +36,11 @@ classifiers = [
     "Operating System :: OS Independent",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
 ]
 dependencies = [
     "click",
@@ -79,7 +79,7 @@ rnanorm = "rnanorm.cli:main"
 [tool.setuptools_scm]
 
 [tool.black]
-target-version = ["py38", "py39", "py310", "py311", "py312"]
+target-version = ["py39", "py310", "py311", "py312", "py313"]
 line-length = 99
 
 [tool.isort]

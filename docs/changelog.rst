@@ -6,6 +6,20 @@ All notable changes to this project are documented in this file.
 
 
 ==================
+2.2.0 - 2025-01-29
+==================
+
+Added
+-----
+- Add support for Python 3.13
+
+Changed
+-------
+- Remove support for Python 3.8
+- Update deprecated ``sklearn`` validation methods
+
+
+==================
 2.1.0 - 2023-11-03
 ==================
 
