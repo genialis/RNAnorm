@@ -7,7 +7,7 @@ from scipy.stats import gmean, rankdata, scoreatpercentile
 from sklearn import config_context
 from sklearn.base import BaseEstimator, OneToOneFeatureMixin, TransformerMixin
 from sklearn.utils._set_output import _get_output_config
-from sklearn.utils.validation import check_is_fitted
+from sklearn.utils.validation import check_is_fitted, validate_data
 
 from ..typing import Numeric1D, Numeric2D, Self
 from .utils import LibrarySize
@@ -116,7 +116,7 @@ class UQ(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
         :return: Self
         """
         self._reset()
-        X = self._validate_data(X, force_all_finite=True, reset=True)
+        X = validate_data(self, X, ensure_all_finite=True, reset=True)
 
         factors = self._get_norm_factors(X)
         self.geometric_mean_ = gmean(factors)
@@ -130,7 +130,7 @@ class UQ(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
         :return: Normalized expression matrix (n_samples, n_features)
         """
         check_is_fitted(self)
-        X = self._validate_data(X, force_all_finite=True, reset=False)
+        X = validate_data(self, X, ensure_all_finite=True, reset=False)
 
         # Compute effective library sizes
         factors = self.get_norm_factors(X)
@@ -179,7 +179,7 @@ class CUF(UQ):
         :return: Normalized expression matrix (n_samples, n_features)
         """
         check_is_fitted(self)
-        X = self._validate_data(X, force_all_finite=True, reset=False)
+        X = validate_data(self, X, ensure_all_finite=True, reset=False)
 
         # Just divide raw counts with normalization factors
         factors = self.get_norm_factors(X)
@@ -326,7 +326,7 @@ class TMM(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
         :param X: Expression raw count matrix (n_samples, n_features)s
         """
         check_is_fitted(self)
-        X2 = self._validate_data(X, force_all_finite=True, reset=False, dtype=float)
+        X2 = validate_data(self, X, ensure_all_finite=True, reset=False, dtype=float)
 
         factors = self._get_norm_factors(X2)
         factors = factors / self.geometric_mean_
@@ -355,7 +355,7 @@ class TMM(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
         :return: Self
         """
         self._reset()
-        X = self._validate_data(X, force_all_finite=True, reset=True, dtype=float)
+        X = validate_data(self, X, ensure_all_finite=True, reset=True, dtype=float)
         X = remove_zero_genes(X)
 
         self.ref_ = self._get_ref(X)
@@ -381,7 +381,7 @@ class TMM(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
 
         # Method ``check_is_fitted`` is not called here, since it is
         # called in self.get_norm_factors
-        X = self._validate_data(X, force_all_finite=True, reset=False, dtype=float)
+        X = validate_data(self, X, ensure_all_finite=True, reset=False, dtype=float)
 
         # Make CPM, but with effective library size
         return X / effective_lib_size[:, np.newaxis] * 1e6
@@ -435,6 +435,6 @@ class CTF(TMM):
 
         # Method ``check_is_fitted`` is not called here, since it is
         # called in self.get_norm_factors
-        X = self._validate_data(X, force_all_finite=True, reset=False, dtype=float)
+        X = validate_data(self, X, ensure_all_finite=True, reset=False, dtype=float)
 
         return X / factors[:, np.newaxis]

@@ -1,6 +1,7 @@
 """Utilities for normalization."""
 import numpy as np
 from sklearn.preprocessing import FunctionTransformer
+from sklearn.utils.validation import validate_data
 
 from ..typing import Numeric2D
 
@@ -48,5 +49,5 @@ class LibrarySize(FunctionTransformer):
         """
         kwargs = dict()
         if self.allow_nan:
-            kwargs["force_all_finite"] = "allow-nan"
-        return self._validate_data(X, reset=reset, **kwargs)
+            kwargs["ensure_all_finite"] = "allow-nan"
+        return validate_data(self, X, reset=reset, **kwargs)

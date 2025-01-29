@@ -6,6 +6,7 @@ from typing import Optional, Union
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import FunctionTransformer
+from sklearn.utils.validation import validate_data
 
 from ..annotation import GTF
 from ..typing import Numeric1D, Numeric2D
@@ -73,8 +74,9 @@ class CPM(FunctionTransformer):
         """
         kwargs = dict()
         if self.allow_nan:
-            kwargs["force_all_finite"] = "allow-nan"
-        return self._validate_data(X, reset=reset, **kwargs)
+            kwargs["ensure_all_finite"] = "allow-nan"
+        # return self._validate_data(X, reset=reset, **kwargs)
+        return validate_data(self, X, reset=reset, **kwargs)
 
 
 class BaseNormalizationWithGTF(FunctionTransformer):

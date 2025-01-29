@@ -46,7 +46,7 @@ dependencies = [
     "click",
     "numpy >= 1.0.0",
     "pandas >= 1.0.0",
-    "scikit-learn >= 1.0.0",
+    "scikit-learn >= 1.6.0",
     "pandera",
 ]
 
