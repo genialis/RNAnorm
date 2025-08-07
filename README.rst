@@ -38,6 +38,8 @@ Python implementation of common RNA-seq normalization methods:
 - CUF_ (Counts adjusted with UQ factors)
 - TMM_ (Trimmed mean of M-values)
 - CTF_ (Counts adjusted with TMM factors)
+- RLE_ (Relative log expression)
+- CRF (Counts adjusted with RLE factors)
 
 For in-depth description of methods see documentation_.
 
@@ -47,6 +49,7 @@ For in-depth description of methods see documentation_.
 .. _CUF: https://genomebiology.biomedcentral.com/articles/10.1186/s13059-021-02568-9/
 .. _TMM: https://genomebiology.biomedcentral.com/articles/10.1186/gb-2010-11-3-r25
 .. _CTF: https://genomebiology.biomedcentral.com/articles/10.1186/s13059-021-02568-9/
+.. _RLE: https://genomebiology.biomedcentral.com/articles/10.1186/gb-2010-11-10-r106
 .. _documentation: https://rnanorm.readthedocs.io/
 
 

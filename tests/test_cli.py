@@ -5,7 +5,7 @@ from io import StringIO
 import pandas as pd
 import pytest
 
-from rnanorm import CPM, CTF, CUF, FPKM, TMM, TPM, UQ
+from rnanorm import CPM, CRF, CTF, CUF, FPKM, RLE, TMM, TPM, UQ
 from rnanorm.annotation import GTF
 
 
@@ -189,4 +189,28 @@ def test_ctf(exp, exp_path, out_path):
     pd.testing.assert_frame_equal(
         pd.read_csv(out_path, index_col=0),
         CTF().set_output(transform="pandas").fit_transform(exp),
+    )
+
+
+def test_rle(exp, exp_path, out_path):
+    assert not out_path.is_file()
+
+    cp = subprocess.run(["rnanorm", "rle", str(exp_path), "--out", str(out_path)])
+    assert out_path.is_file()
+    assert cp.returncode == 0
+    pd.testing.assert_frame_equal(
+        pd.read_csv(out_path, index_col=0),
+        RLE().set_output(transform="pandas").fit_transform(exp),
+    )
+
+
+def test_crf(exp, exp_path, out_path):
+    assert not out_path.is_file()
+
+    cp = subprocess.run(["rnanorm", "crf", str(exp_path), "--out", str(out_path)])
+    assert out_path.is_file()
+    assert cp.returncode == 0
+    pd.testing.assert_frame_equal(
+        pd.read_csv(out_path, index_col=0),
+        CRF().set_output(transform="pandas").fit_transform(exp),
     )

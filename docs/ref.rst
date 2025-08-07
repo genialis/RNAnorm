@@ -20,6 +20,8 @@ Normalization methods
    CUF
    TMM
    CTF
+   RLE
+   CRF
 
 
 Datasets

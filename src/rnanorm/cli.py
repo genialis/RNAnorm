@@ -9,9 +9,9 @@ from typing import Any, Callable, Optional, Type, Union
 import click
 import pandas as pd
 
-from rnanorm import CPM, CTF, CUF, FPKM, TMM, TPM, UQ
+from rnanorm import CPM, CRF, CTF, CUF, FPKM, RLE, TMM, TPM, UQ
 
-method_type = Type[Union[CPM, FPKM, TMM, TPM, UQ]]
+method_type = Type[Union[CPM, FPKM, TMM, RLE, TPM, UQ]]
 file_type = Union[io.TextIOWrapper, Path]
 
 
@@ -186,6 +186,20 @@ def ctf(exp: pd.DataFrame, out: file_type, force: bool, m_trim: float, a_trim: f
     CLWrapper(CTF, m_trim=m_trim, a_trim=a_trim).handle(exp, out, force)
 
 
+@click.command(short_help="Reliative log expression")
+@common_params
+def rle(exp: pd.DataFrame, out: file_type, force: bool) -> None:
+    """Compute RLE."""
+    CLWrapper(RLE).handle(exp, out, force)
+
+
+@click.command(short_help="Counts adjusted with RLE factors")
+@common_params
+def crf(exp: pd.DataFrame, out: file_type, force: bool) -> None:
+    """Compute CRF."""
+    CLWrapper(CRF).handle(exp, out, force)
+
+
 @click.group()
 def main() -> None:
     """Common RNA-seq normalization methods."""
@@ -200,3 +214,5 @@ main.add_command(uq)
 main.add_command(cuf)
 main.add_command(tmm)
 main.add_command(ctf)
+main.add_command(rle)
+main.add_command(crf)

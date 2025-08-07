@@ -6,6 +6,22 @@ All notable changes to this project are documented in this file.
 
 
 ==================
+2.3.0 - 2025-08-07
+==================
+
+Added
+-----
+- Implementation of the following methods:
+
+    - RLE
+    - CRF
+
+Changed
+-------
+- Emit a warning when a sample has an upper-quartile of zero during 
+  UQ normalisation; previously this silently produced Inf
+
+==================
 2.2.0 - 2025-01-29
 ==================
 
